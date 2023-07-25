@@ -33,16 +33,16 @@ from utils.preprocessVis import *
 
 # to import one prototype-weather pair
 dataFull = pd.concat([importRawData('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv/MultiFamily-2004____120.csv',
-                                    'Electricity:Facility [J](Hourly)',
+                                    'Environment:Site Total Zone Exhaust Air Heat Loss [J](Hourly)',
                                     ),
                       importWeatherData('./data/weather input', '120'),
                       importTypical('./data/testrun', 'MultiFamily-2004',
-                                    'Electricity:Facility [J](Hourly)') # for adding the typical
+                                    'Environment:Site Total Zone Exhaust Air Heat Loss [J](Hourly)') # for adding the typical
                      ],
                      axis = 1)
 dataFull.insert(0, 'Climate', dataFull.pop('Climate'))
-# dataFull['GLW'].plot()
-# plt.show()
+dataFull['Environment:Site Total Zone Exhaust Air Heat Loss [J](Hourly)'].plot()
+plt.show()
 
 # # pac
 # plt.figure()

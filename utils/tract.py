@@ -232,6 +232,8 @@ def getTractLevelMetrics(predTractLevel, addr):
     metrics['MAPE'] = mean_absolute_percentage_error(predTractLevel.true.values, predTractLevel.estimate.values)
     metrics['CVRMSE'] = cv_root_mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values)
     metrics['CVMAE'] = cv_mean_absolute_error(predTractLevel.true.values, predTractLevel.estimate.values)
+    metrics['CVRMSE_wAbs'] = cv_root_mean_squared_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values)
+    metrics['CVMAE_wAbs'] = cv_mean_absolute_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values)
 
     peaks_true_index = find_peaks(predTractLevel.true, prominence = 1)[0]
     peaks_true_mag = predTractLevel.true.values[peaks_true_index]
@@ -241,6 +243,8 @@ def getTractLevelMetrics(predTractLevel, addr):
     metrics['PEAK_MAE'] = mean_absolute_error(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CVRMSE'] = cv_root_mean_squared_error(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CVMAE'] = cv_mean_absolute_error(peaks_true_mag, peaks_predict_mag)
+    metrics['PEAK_CVRMSE_wAbs'] = cv_root_mean_squared_error_wAbs(peaks_true_mag, peaks_predict_mag)
+    metrics['PEAK_CVMAE_wAbs'] = cv_mean_absolute_error_wAbs(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CorrectTiming'] = (np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0])
 
     print('RMSE is:', mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values, squared = False))
@@ -249,11 +253,15 @@ def getTractLevelMetrics(predTractLevel, addr):
     print('MAPE is: ', mean_absolute_percentage_error(predTractLevel.true.values, predTractLevel.estimate.values))
     print('CVRMSE is: ', cv_root_mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values))
     print('CVMAE is: ', cv_mean_absolute_error(predTractLevel.true.values, predTractLevel.estimate.values))
+    print('CVRMSE_wAbs is:', cv_root_mean_squared_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values))
+    print('CVMAE_wAbs is:', cv_mean_absolute_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values))
 
     print('RMSE at peaks is:', mean_squared_error(peaks_true_mag, peaks_predict_mag, squared = False))
     print('MAE at peaks is: ', mean_absolute_error(peaks_true_mag, peaks_predict_mag))
     print('CVRMSE at peak is: ', cv_root_mean_squared_error(peaks_true_mag, peaks_predict_mag))
     print('CVMAE at peaks is: ', cv_mean_absolute_error(peaks_true_mag, peaks_predict_mag))
+    print('PEAK_CVRMSE_wAbs at peak is', cv_root_mean_squared_error_wAbs(peaks_true_mag, peaks_predict_mag))
+    print('PEAK_CVMAE_wAbs at peak is', cv_mean_absolute_error_wAbs(peaks_true_mag, peaks_predict_mag))
     print('Percentage of correct peak timing is: ', (np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0]))
 
     with open(addr + '/' + 'tractLevelMetrics.json', 'w') as f:

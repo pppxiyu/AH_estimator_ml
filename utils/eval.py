@@ -99,11 +99,11 @@ def cv_mean_absolute_error(true, predict):
 def cv_root_mean_squared_error(true, predict):
     return mean_squared_error(true, predict, squared = False) / np.mean(true)
 
-def adapted_cv_mean_absolute_error(true, predict):
-    return mean_absolute_error(true, predict) / np.mean(true)
+def cv_mean_absolute_error_wAbs(true, predict):
+    return mean_absolute_error(true, predict) / np.mean(np.abs(true))
 
-def adapated_cv_root_mean_squared_error(true, predict):
-    return mean_squared_error(true, predict, squared = False) / np.mean(true)
+def cv_root_mean_squared_error_wAbs(true, predict):
+    return mean_squared_error(true, predict, squared = False) / np.mean(np.abs(true))
 
 def coolingElec(dfEval, climateList_test, timeRange, grid, locs, saveAddr):
     if timeRange:

@@ -113,5 +113,5 @@ if __name__ == '__main__':
     getTractLevelMetrics(tractsDf, './saved/estimates_tracts/' + experimentLabel)
     plotPrototypeLevelMetrics(prediction_tract, 
         './saved/estimates_tracts/' + experimentLabel, 
-        cv_mean_absolute_error, 
-        'CVMAE')
+        cv_mean_absolute_error_wAbs,
+        'CVMAE_wAbs')

@@ -49,7 +49,6 @@ dataFull = getAllData4Prototype(prototypeName,
 lagList = (
     (np.arange(24) + 1).tolist()
 )
-# lagList = [1] + [i + 1 for i in lagList] # add this line if 2 timestamp forward will be predicted
 train_X, train_Y, val_X, val_Y, testSequenceList, testClimateList = makeDatasets(getClimateName4Prototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv', prototypeName),
                                                                                  dataFull,
                                                                                  lagList,
