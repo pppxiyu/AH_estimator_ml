@@ -1,0 +1,11 @@
+slurm.sbatch
+.gitignore.gitignore
+data/
+.idea/
+.ipynb_checkpoints/
+__pycache__/
+legacy/
+paper/
+figs/
+saved/
+
