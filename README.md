@@ -64,4 +64,17 @@ Training and estimation:
 python run.py
 ```
 
+## Auxiliary files
+`run_preAnalysis.py` conducts preliminary analysis (e.g., visualization, autocorelation plot) 
+on the raw data.
+
+`run_prototypeLevel.py` runs the model for the selected prototype. Keep it for
+debugging purposes.
+
+`run_resumeEval.py` and `run_resumeScaleUp.py` are kept for debugging purposes. They 
+reload the saved estimations on the prototype level and redo the scaling up
+to census tract level or the metrics calculation/visualiztion.
+
 ## Reference
+
+
