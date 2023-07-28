@@ -3,6 +3,37 @@
 Deep learning-based estimation of AH and Energy load on 
 the cencus tract level for a quick expasion of simulated data.
 
+## Abstract
+
+## I/O
+### Input data
+Download the dataset from `  ` and name it as `data` in the root dir of the project.
+Please refer to the work by [Xu et. al.](https://github.com/IMMM-SFA/xu_etal_2022_sdata)
+for the explaination of the datasets.
+
+### Outputs
+After configure and run the program, a folder that contains all the outputs for
+this run will be generated under `./saved/estimates_tracts`. The output folder
+is named with `target_model_experimentTime`. For example, `energyElec_biLSTM_2023-07-21-21-39-29`
+is the output folder for estimating electricity with bi-directional LSTM at
+21:39:29 07/21 2023 (available targets and model names are introduced below).
+
+`pairListTest.json` and `pairListTrain.json` contains the `prototype-weather` pairs
+used for test and training.
+
+The `buildingLevel` folder under the `./saved/estimates_tracts/target_model_experimentTime` contains
+the intermediate result. Each `.csv` file contains the hourly estimation of the
+target at the building prototype level.
+
+`tractsDF.csv` is the estimation of the target at the census tract level.
+
+`config.py` shows the configuration of this experiment, and other files in the 
+`./saved/estimates_tracts/target_model_experimentTime` folder are used for 
+the evaluation and visualization of the estimations.
+
+
+
+
 ## Configuration
 Edit the `config.py` to configure the training and estimation.
 
@@ -48,10 +79,7 @@ an even number.
 and the `modelName`. For example, `energyElec_biLSTM` stands for the experiment
 using `'biLSTM'` for estimating `'energy.elec'`.
 
-## Datasets
-Download the dataset from `  ` and name it as `data` in the root dir of the project.
-Please refer to the work by [Xu et. al.](https://github.com/IMMM-SFA/xu_etal_2022_sdata)
-for the explaination of the datasets.
+
 
 ## Installation and running
 
@@ -73,7 +101,9 @@ debugging purposes.
 
 `run_resumeEval.py` and `run_resumeScaleUp.py` are kept for debugging purposes. They 
 reload the saved estimations on the prototype level and redo the scaling up
-to census tract level or the metrics calculation/visualiztion.
+to census tract level or the metrics calculation/visualiztion. Please also
+use `run_resumeEval.py` to run new evaluation functions, 
+if further custom evaluation of the estimation is needed
 
 ## Reference
 
