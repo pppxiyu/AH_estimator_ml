@@ -92,6 +92,7 @@ def train_tract_biRNN(protoList, pairList_train, pairList_test, featureList, tar
                                                         featureList,
                                                         splitData_biRNN,
                                                         allInTrain = True,
+                                                        shuffle = True,
                                                         )
         # train and save model
         tuner = kt.BayesianOptimization(
@@ -147,3 +148,7 @@ def train_tract_biRNN(protoList, pairList_train, pairList_test, featureList, tar
             predictionDict[prototypeSelect + '____' + weatherSelect] = predictionDF
 
     return predictionDict
+
+
+if __name__ == '__main__':
+    pass

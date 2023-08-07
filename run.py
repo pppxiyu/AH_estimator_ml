@@ -1,18 +1,19 @@
 import json
-
+import time
 from models.LSTM import *
 from models.biLSTM import *
+from models.biLSTM_global import *
 from models.naive import *
 from models.linear import *
 from models.mlp import *
-
 from utils.preprocess import *
 from utils.tract import *
 from utils.eval import cv_mean_absolute_error
-
 import config
 
 if __name__ == '__main__':
+
+    startTime = time.time()
 
     # 0.0 config
     features = config.features
@@ -23,6 +24,10 @@ if __name__ == '__main__':
     maxEpoch = config.maxEpoch
     target_tractLevel = config.target_tractLevel
     saveFolderHead = config.saveFolderHead
+    randomSeed = config.randomSeed
+
+    # 0.0 randomness
+    np.random.seed(randomSeed)
 
     # 0.1 create a dir for saving results
     currentTime = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -81,6 +86,18 @@ if __name__ == '__main__':
                                              lag = lag,
                                              )
 
+    if modelName == 'biLSTM_global':
+        prediction_tract = train_tract_biRNN_global(getAllPrototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+                                                    pairListTrain, pairListTest,
+                                                    features,
+                                                    target = target_buildingLevel,
+                                                    lag = lag,
+                                                    tuneTrail = tuneTrail,
+                                                    maxEpoch = maxEpoch,
+                                                    metaDataDir = './data/building_metadata/building_metadata.csv',
+                                                    randomSeed = randomSeed,
+                                                    )
+
     if not os.path.exists(dirName + '/buildingLevel'):
         os.makedirs(dirName + '/buildingLevel')
     for key, df in prediction_tract.items():
@@ -101,6 +118,9 @@ if __name__ == '__main__':
     # 2.1 scaling up
     estimate_tract = predict_tracts(prediction_tract_norm, tractBuildingMeta)
 
+    endTime = time.time()
+    executionTime = endTime - startTime
+
     # 3 get true data and remove tract with weather that is not in the test pairs
     true_tract = filterTractData(loadTractData('./data/hourly_heat_energy/annual_2018_tract.csv', target_tractLevel),
                                  estimate_tract)
@@ -110,8 +130,11 @@ if __name__ == '__main__':
     tractsDf = combineEstimateTrue(true_tract, estimate_tract, target_tractLevel)
     tractsDf.to_csv(dirName + '/' + 'tractsDF.csv')
 
-    getTractLevelMetrics(tractsDf, './saved/estimates_tracts/' + experimentLabel)
-    plotPrototypeLevelMetrics(prediction_tract, 
-        './saved/estimates_tracts/' + experimentLabel, 
+    getTractLevelMetrics(tractsDf,
+                         './saved/estimates_tracts/' + experimentLabel,
+                         executionTime,
+                         )
+    plotPrototypeLevelMetrics(prediction_tract,
+        './saved/estimates_tracts/' + experimentLabel,
         cv_mean_absolute_error_wAbs,
         'CVMAE_wAbs')

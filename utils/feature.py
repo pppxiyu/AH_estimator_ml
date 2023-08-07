@@ -91,14 +91,14 @@ def sequencesGeneration_legacy(data, endIndex, windowSize, startIndex = 0, strid
     )
     return data[sequencesIndex]
 
-def sequencesGeneration(df, lag, weatherFeatureList, target):
+def sequencesGeneration(df, lag, featureList, target):
     target = [target]
     sequences = np.empty((len(df) - (lag[-1]), len(lag) + 1, 1))
-    for variable in (target + weatherFeatureList):
+    for variable in (target + featureList):
         dataFull_lag = add_lags(df, lags = lag, column = variable)[0]
         dataFull_lag = dataFull_lag.dropna()
 
-        dropList = weatherFeatureList + target
+        dropList = featureList + target
         dropList.remove(variable)
         dataFull_lag = dataFull_lag.drop(columns = dropList, axis = 1)
 
@@ -143,8 +143,11 @@ def splitData(sequences, valProportion, testProportion, yCount, shuffle = False,
     elif ifMakeTest == False:
         return trainX, trainY, valX, valY
 
-def splitData_biRNN(sequences, valProportion, testProportion, yCount):
-    
+def splitData_biRNN(sequences, valProportion, testProportion, yCount, shuffle = False):
+
+    if shuffle == True:
+        np.random.shuffle(sequences)
+
     # for convenience, the length of each sequence should an odd number, the target timestamp is in the middle
     sequenceLen = sequences.shape[1]
     if sequenceLen % 2 == 0:
@@ -167,7 +170,8 @@ def splitData_biRNN(sequences, valProportion, testProportion, yCount):
 
     return trainX, trainY, valX, valY
     
-def makeDatasets(protoClimate, data, lag, target, weatherFeatureList, splitFunc, vtPercent = 0.15, allInTrain = False):
+def makeDatasets(protoClimate, data, lag, target, weatherFeatureList, splitFunc,
+                 vtPercent = 0.15, allInTrain = False, shuffle = False):
     # The data from prototype-weather pair is processed seperately the combined.
     # Test prototype-weather pairs are eliminated before using splitData.
 
@@ -194,8 +198,7 @@ def makeDatasets(protoClimate, data, lag, target, weatherFeatureList, splitFunc,
     sequences_train = np.concatenate(sequenceList_train, axis = 0)
 
     # split sequneces into datasets
-    trainX, trainY, valX, valY = splitFunc(sequences_train, vtPercent, vtPercent, 1, )
-#     trainX, trainY, valX, valY = splitData(sequences_train, vtPercent, vtPercent, 2, ) # 2 timestamps forward
+    trainX, trainY, valX, valY = splitFunc(sequences_train, vtPercent, vtPercent, 1, shuffle = shuffle)
     print('The length of testSequenceList is ', len(sequenceList_test))
     if allInTrain == False:
         print('Each sequence set in testSequenceList is shaped ', sequenceList_test[0].shape)

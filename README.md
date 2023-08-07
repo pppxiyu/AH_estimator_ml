@@ -61,7 +61,7 @@ column of the following table.
 
 
 `modelName`: string. Supports `'naive'`, `'LSTM'`, `'biRNN'`, `'linear'`, 
-`'mlp'`.
+`'mlp'`, and `biRNN_global`.
 
 `tuneTrail`: int. Number of trails in hyper-parameter tuning. Only works
 for `'LSTM'` and `'biLSTM'`.
@@ -78,6 +78,18 @@ an even number.
 `saveFolderHead`: string. Recommend name it using the `target_tractLevel`
 and the `modelName`. For example, `energyElec_biLSTM` stands for the experiment
 using `'biLSTM'` for estimating `'energy.elec'`.
+
+`randomSeed`: int. The random seed used by numpy.random.
+
+## Global estimation option
+
+Global estimation means using one single model to do the estimation for all prototypes. It is expected to 
+generate better accuracy in some cases, because different prototypes share part of the data generation process,
+and it works as a simple multitasks learning architecture. However, it should be noted that the number of
+samples for the model will increase dramatically, as the samples for each separate model of each prototype
+has been stacked togather. The total size of training and validation `numpy` array with `float32` type
+is about 25GB. Servers with 30GB GPU and CPU memory are recommended to be used for the global esitmation option.
+
 
 
 

@@ -17,7 +17,8 @@ import json
 import plotly.express as px
 import plotly.graph_objects as go
 
-## sampling
+
+## sampling ####################
 def splitBuildingWeatherPair(addr):
     # USE: randomly select some weather zones for test
     #      make sure the training pairs have all building types
@@ -52,7 +53,8 @@ def splitBuildingWeatherPair(addr):
 
     return pairList_train, pairList_test
 
-## normalize to per m2
+
+## normalize to per m2 #########################
 def getBuildingArea_prototype(addr, verbose = 0):
     # USE: get the building area of building prototype
     # INPUT: the address of simulation outputs directory
@@ -102,7 +104,8 @@ def normalize_perM2(predictionDict, pairList_test, buildingArea_dict):
         predictionDict_norm[testPairName] = testPair_df
     return predictionDict_norm
 
-# scale up to tracts
+
+#### scale up to tracts ######################
 def getBuildingArea_tracts(addr, pairList_test):
     # USE: get the building area of each prototype-weather pair for all tracts
     # INPUT: building meta data csv file
@@ -164,6 +167,7 @@ def getTracts_remove(addr, tractsMeta):
 
     return tractsWithProblem
 
+
 ## get ground truth
 def loadTractData(addr, colName):
     # USE: load the true tract-level data
@@ -181,6 +185,7 @@ def filterTractData(tractData, estimateTractData):
     tractDataFiltered = tractData[tractData.geoid.isin(geoid4test)]
     tractDataFiltered = tractDataFiltered.sort_values(by = ['geoid', 'timestamp'])
     return tractDataFiltered
+
 
 # eval
 def combineEstimateTrue(true, estimate, target):
@@ -219,7 +224,7 @@ def metricPrototype(metric_dict, metricName):
     return df_group
 
 
-def getTractLevelMetrics(predTractLevel, addr):
+def getTractLevelMetrics(predTractLevel, addr, computeTime = None):
 
     # USE: get the metrics at tract level
     # INPUT: the folder containing running results
@@ -247,6 +252,8 @@ def getTractLevelMetrics(predTractLevel, addr):
     metrics['PEAK_CVMAE_wAbs'] = cv_mean_absolute_error_wAbs(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CorrectTiming'] = (np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0])
 
+    metrics['exeTIME'] = computeTime
+
     print('RMSE is:', mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values, squared = False))
     print('MAE is: ', mean_absolute_error(predTractLevel.true.values, predTractLevel.estimate.values))
 
@@ -263,6 +270,8 @@ def getTractLevelMetrics(predTractLevel, addr):
     print('PEAK_CVRMSE_wAbs at peak is', cv_root_mean_squared_error_wAbs(peaks_true_mag, peaks_predict_mag))
     print('PEAK_CVMAE_wAbs at peak is', cv_mean_absolute_error_wAbs(peaks_true_mag, peaks_predict_mag))
     print('Percentage of correct peak timing is: ', (np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0]))
+
+    print('exeTIME is: ', computeTime)
 
     with open(addr + '/' + 'tractLevelMetrics.json', 'w') as f:
         json.dump(metrics, f)
