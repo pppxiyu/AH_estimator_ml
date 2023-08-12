@@ -1,15 +1,15 @@
 # AH_estimator_ml
 
-Deep learning-based estimation of AH and Energy load on 
-the cencus tract level for a quick expasion of simulated data.
-
 ## Abstract
 
 ## I/O
-### Input data
-Download the dataset from `  ` and name it as `data` in the root dir of the project.
+### Inputs
+Download the dataset from [Google Drive](https://drive.google.com/drive/folders/1RWX9ef1bM4drVp5AVWS11xkaZFG_q-DO?usp=drive_link) 
+and name it as `data` in the root dir of the project.
 Please refer to the work by [Xu et. al.](https://github.com/IMMM-SFA/xu_etal_2022_sdata)
 for the explaination of the datasets.
+
+Create a dir `./saved/estimates_tracts` in the root dir of the project.
 
 ### Outputs
 After configure and run the program, a folder that contains all the outputs for
@@ -81,6 +81,23 @@ using `'biLSTM'` for estimating `'energy.elec'`.
 
 `randomSeed`: int. The random seed used by numpy.random.
 
+`dirTargetYear`: `None` or list. In default, `dirTargetYear` is set as `None`. In 
+this case, the microclimates zones in the 2018 is split into training and testing 
+set. However, in real use case, 2018 microclimate zones are used for training. The trained
+model will estimate the targets in another year. `dirTargetYear` should be set as a 
+list, indicating the dir of input features and ground truth (if any) for test.
+The first element is the dir of energy data. The second is for weather data. The third is 
+for typical target values. The last one is the tract level ground truth. Example for estimating 2016 whole year:
+```
+[
+'./data/hourly_heat_energy/sim_result_ann_WRF_2016_csv',
+'./data/weather input/2016',
+'./data/testrun',
+'./data/hourly_heat_energy/annual_2016_tract.csv'
+]
+```
+
+
 ## Global estimation option
 
 Global estimation means using one single model to do the estimation for all prototypes. It is expected to 
@@ -116,7 +133,3 @@ reload the saved estimations on the prototype level and redo the scaling up
 to census tract level or the metrics calculation/visualiztion. Please also
 use `run_resumeEval.py` to run new evaluation functions, 
 if further custom evaluation of the estimation is needed
-
-## Reference
-
-

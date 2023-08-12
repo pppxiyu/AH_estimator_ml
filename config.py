@@ -17,6 +17,18 @@ NaturalGas:Facility [J](Hourly)                                     energy.gas
 lag length must be a even number if biRNN is used.
 
 modelName: 'naive', 'LSTM', 'biRNN', 'linear', 'mlp'
+
+dirTargetYear: a list of four elements. First element is the dir of energy data. Second is for weather data. Third is
+    for typical target values. The last one is the tract level ground truth.
+    Example for estimating 2016 whole year:
+    [
+    './data/hourly_heat_energy/sim_result_ann_WRF_2016_csv',
+    './data/weather input/2016',
+    './data/testrun',
+    './data/hourly_heat_energy/annual_2016_tract.csv'
+    ]
+    Leave it as None if train and test are in the same year.
+
 """
 
 # feature info
@@ -31,7 +43,7 @@ lag = (
 )
 
 # model info
-modelName = 'biLSTM_global'
+modelName = 'biLSTM'
 tuneTrail = 1
 maxEpoch = 500
 
@@ -39,7 +51,15 @@ maxEpoch = 500
 target_tractLevel = 'energy.elec'
 
 # results saving for further eval
-saveFolderHead = 'energyElec_biLSTM_global'
+saveFolderHead = 'energyElec_biLSTM'
 
 # random seed
 randomSeed = 1
+
+# target year
+dirTargetYear = [
+    './data/hourly_heat_energy/sim_result_ann_WRF_2016_csv',
+    './data/weather input/2016',
+    './data/testrun',
+    './data/hourly_heat_energy/annual_2016_tract.csv'
+    ]

@@ -81,11 +81,26 @@ class biLSTM_tuner_global(kt.HyperModel):
             **kwargs,
         )
 
-def train_tract_biRNN_global(protoList, pairList_train, pairList_test, featureList, target, lag, tuneTrail, maxEpoch, metaDataDir, randomSeed):
+def train_tract_biRNN_global(dirs, pairList_train, pairList_test, featureList, target, lag, tuneTrail, maxEpoch, metaDataDir, randomSeed):
     # USE: use the building-weather pairs in the train pair set to train
     #      do prediction using the new weathers in the test pair set
     # INPUT: all prototype list, pairs for train, pairs for test, featrue names, target name, lag list, ifTune True or False
     # OUTPUT: dict, each value is the prediction for a pair in the test pair set
+
+    dirEnergy = dirs[0]
+    dirWeather = dirs[1]
+    dirTypical = dirs[2]
+    try:
+        dirEnergyTarget = dirs[3]
+        dirWeatherTarget = dirs[4]
+        dirTypicalTarget = dirs[5]
+    except:
+        dirEnergyTarget = dirEnergy
+        dirWeatherTarget = dirWeather
+        dirTypicalTarget = dirTypical
+        print('Evaluation mode. Train and test data are in same year.')
+
+    protoList = getAllPrototype(dirEnergy)
 
     ###################### Merging data for all prototype and ecoding feature ##################
     try: # check if there is saved data
@@ -111,9 +126,9 @@ def train_tract_biRNN_global(protoList, pairList_train, pairList_test, featureLi
 
             # get weather data in train_pairs for the prototype
             data_1 = getAllData4Prototype(prototypeSelect, protoClimate,
-                                          './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv',
-                                          './data/weather input',
-                                          './data/testrun',
+                                          dirEnergy,
+                                          dirWeather,
+                                          dirTypical,
                                           target,
                                           )
             data_1['prototype'] = prototypeSelect
@@ -284,11 +299,11 @@ def train_tract_biRNN_global(protoList, pairList_train, pairList_test, featureLi
             # get data of each weather
             weatherSelect = str(weatherSelect)
             data_energy = importRawData(
-                './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv/' + prototypeSelect + '____' + weatherSelect + '.csv',
+                dirEnergyTarget + '/' + prototypeSelect + '____' + weatherSelect + '.csv',
                 col = target
                 )
-            data_weatherSelect = importWeatherData('./data/weather input', weatherSelect)
-            data_typical = importTypical('./data/testrun', prototypeSelect,
+            data_weatherSelect = importWeatherData(dirWeatherTarget, weatherSelect)
+            data_typical = importTypical(dirTypicalTarget, prototypeSelect,
                                          target)
 
             # data_encodes = encodingDf[['prototype_' + prototypeSelect]].transpose() # one-hot encoding

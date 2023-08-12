@@ -14,15 +14,28 @@ def linear_predict(sequenceList_test, model):
         predictionList.append(prediction)
     return predictionList
 
-def train_tract_linear(protoList, pairList_train, pairList_test, featureList, target, lag):
+def train_tract_linear(dirs, pairList_train, pairList_test, featureList, target, lag):
     # USE: use the building-weather pairs in the train pair set to train
     #      do prediction using the new weathers in the test pair set
     # INPUT: all prototype list, pairs for train, pairs for test, featrue names, target name, lag list, ifTune True or False
     # OUTPUT: dict, each value is the prediction for a pair in the test pair set
 
+    dirEnergy = dirs[0]
+    dirWeather = dirs[1]
+    dirTypical = dirs[2]
+    try:
+        dirEnergyTarget = dirs[3]
+        dirWeatherTarget = dirs[4]
+        dirTypicalTarget = dirs[5]
+    except:
+        dirEnergyTarget = dirEnergy
+        dirWeatherTarget = dirWeather
+        dirTypicalTarget = dirTypical
+        print('Evaluation mode. Train and test data are in same year.')
+
     # for each of the prototype
     predictionDict = {}
-    for prototypeSelect in protoList:
+    for prototypeSelect in getAllPrototype(dirEnergy):
 
         ########### train ###########
         print()
@@ -35,9 +48,9 @@ def train_tract_linear(protoList, pairList_train, pairList_test, featureList, ta
 
         # get weather data in train_pairs for the prototype
         data = getAllData4Prototype(prototypeSelect, protoClimate,
-                                    './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv',
-                                    './data/weather input',
-                                    './data/testrun',
+                                    dirEnergy,
+                                    dirWeather,
+                                    dirTypical,
                                     target,
                                     )
         # build datasets
@@ -74,11 +87,11 @@ def train_tract_linear(protoList, pairList_train, pairList_test, featureList, ta
 
             # get data of each weather
             weatherSelect = str(weatherSelect)
-            data_energy = importRawData('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv/' + prototypeSelect + '____' + weatherSelect + '.csv',
+            data_energy = importRawData(dirEnergyTarget + '/' + prototypeSelect + '____' + weatherSelect + '.csv',
                                         col = target
                                         )
-            data_weatherSelect = importWeatherData('./data/weather input', weatherSelect)
-            data_typical = importTypical('./data/testrun', prototypeSelect, target) # for adding the typical
+            data_weatherSelect = importWeatherData(dirWeatherTarget, weatherSelect)
+            data_typical = importTypical(dirTypicalTarget, prototypeSelect, target) # for adding the typical
             data = pd.concat([data_energy, data_weatherSelect, data_typical], axis = 1)
             dataShort = data[[target] + featureList]
             sequences_weatherSelect = sequencesGeneration(dataShort, lag, featureList, target)

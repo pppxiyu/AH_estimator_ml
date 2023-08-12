@@ -110,38 +110,12 @@ def getBuildingArea_tracts(addr, pairList_test):
     # USE: get the building area of each prototype-weather pair for all tracts
     # INPUT: building meta data csv file
     # OUTPUT: df, with tract, building type, weather column, and the corresponding building area
-
     buildingMeta = pd.read_csv(addr)
-#     pairList_test_idfkw = [item[0] for item in pairList_test] # building prototype
     pairList_test_idgridcoarse = [item[1] for item in pairList_test] # weather
-#     buildingMeta_forTest = buildingMeta[(buildingMeta['idf.kw'].isin(pairList_test_idfkw)) & (buildingMeta['id.grid.coarse'].isin(pairList_test_idgridcoarse))]
     buildingMeta_forTest = buildingMeta[buildingMeta['id.grid.coarse'].isin(pairList_test_idgridcoarse)]
     buildingMeta_forTest_tract = buildingMeta_forTest.groupby(['id.tract', 'idf.kw', 'id.grid.coarse'])['building.area.m2'].sum()
     buildingMeta_forTest_tract = buildingMeta_forTest_tract.reset_index()
     return buildingMeta_forTest_tract
-
-def predict_tracts(predictionDict_norm, buildingMeta_tract):
-    # USE: scale up the normed estimation of building-weather pairs to tracts
-    # INPUT: normed estimation of building-weather pairs; building area of each prototype-weather pair for all tracts
-    # OUTPUT: df, estimation for tracts
-
-    estimate_tract_df_list = []
-    for tract in buildingMeta_tract['id.tract'].unique().tolist():  # iterate all tracts
-
-        tractDf = buildingMeta_tract[buildingMeta_tract['id.tract'] == tract] # get all building-weather pair in the tract
-        estimateTract = np.zeros(len(list(predictionDict_norm.values())[0])) # initiate estimate
-        for i in range(len(tractDf)): # loop through all the building-weather pairs in this tract
-            tractDf_row = tractDf.iloc[i]
-            pairName = tractDf_row['idf.kw'] + '____' + str(tractDf_row['id.grid.coarse'])
-            estimateTract += (predictionDict_norm[pairName]['estimatePerM2'] * tractDf_row['building.area.m2']).values
-        # record it into df
-        estimate_tract_df = list(predictionDict_norm.values())[0].loc[:, ['DateTime']]
-        estimate_tract_df['estimate'] = estimateTract
-        estimate_tract_df.insert(0, 'geoid', [tract] * len(estimate_tract_df))
-        estimate_tract_df_list.append(estimate_tract_df)
-    # concat df for all tracts
-    estimate_tract_df_all = pd.concat(estimate_tract_df_list, axis = 0, ignore_index = True)
-    return estimate_tract_df_all
 
 def getTracts_remove(addr, tractsMeta):
     # USE: get the names of tracts that having weather not in test set
@@ -166,6 +140,30 @@ def getTracts_remove(addr, tractsMeta):
     tractsWithProblem = originalOnly['id.tract'].unique().tolist()
 
     return tractsWithProblem
+
+def predict_tracts(predictionDict_norm, buildingMeta_tract):
+    # USE: scale up the normed estimation of building-weather pairs to tracts
+    # INPUT: normed estimation of building-weather pairs; building area of each prototype-weather pair for all tracts
+    # OUTPUT: df, estimation for tracts
+
+    estimate_tract_df_list = []
+    for tract in buildingMeta_tract['id.tract'].unique().tolist():  # iterate all tracts
+
+        tractDf = buildingMeta_tract[buildingMeta_tract['id.tract'] == tract] # get all building-weather pair in the tract
+        estimateTract = np.zeros(len(list(predictionDict_norm.values())[0])) # initiate estimate
+        for i in range(len(tractDf)): # loop through all the building-weather pairs in this tract
+            tractDf_row = tractDf.iloc[i]
+            pairName = tractDf_row['idf.kw'] + '____' + str(tractDf_row['id.grid.coarse'])
+            estimateTract += (predictionDict_norm[pairName]['estimatePerM2'] * tractDf_row['building.area.m2']).values
+        # record it into df
+        estimate_tract_df = list(predictionDict_norm.values())[0].loc[:, ['DateTime']]
+        estimate_tract_df['estimate'] = estimateTract
+        estimate_tract_df.insert(0, 'geoid', [tract] * len(estimate_tract_df))
+        estimate_tract_df_list.append(estimate_tract_df)
+    # concat df for all tracts
+    estimate_tract_df_all = pd.concat(estimate_tract_df_list, axis = 0, ignore_index = True)
+    return estimate_tract_df_all
+
 
 
 ## get ground truth
@@ -222,7 +220,6 @@ def metricPrototype(metric_dict, metricName):
     df_group = df_group.reset_index()
     df_group = df_group.sort_values(metricName, ascending = True)
     return df_group
-
 
 def getTractLevelMetrics(predTractLevel, addr, computeTime = None):
 
@@ -299,7 +296,8 @@ def plotPrototypeLevelMetrics(predPrototypeLevel, addr, metricFunc, metricName):
     # OUTPUT: save plot to the folder
 
     metric_prototype_ave_dict = metricPrototype(metricPrototypeWeather(predPrototypeLevel, metricFunc), metricName)
-    metric_prototype_ave_dict.plot.barh(x='prototype', y=metricName, figsize=(10, 10))
+    ax = metric_prototype_ave_dict.plot.barh(x='prototype', y=metricName, figsize=(10, 10))
+    ax.bar_label(ax.containers[0])
     plt.subplots_adjust(left=0.55)
     plt.savefig(addr + '/prototypeLevel' + metricName + '.png')
 

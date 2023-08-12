@@ -2,14 +2,24 @@ import warnings
 from utils.preprocess import *
 from utils.tract import *
 
-def train_tract_naive(protoList, pairList_train, pairList_test, target):
+def train_tract_naive(dirs, pairList_train, pairList_test, target):
     # USE:
     # INPUT: all prototype list, pairs for train, pairs for test, featrue names, target name, lag list, ifTune True or False
     # OUTPUT: dict, each value is the prediction for a pair in the test pair set
 
+    dirEnergy = dirs[0]
+    dirWeather = dirs[1]
+    dirTypical = dirs[2]
+    try:
+        dirEnergyTarget = dirs[3]
+
+    except:
+        dirEnergyTarget = dirEnergy
+        print('Evaluation mode. Train and test data are in same year.')
+
     # for each of the prototype
     predictionDict = {}
-    for prototypeSelect in protoList:
+    for prototypeSelect in getAllPrototype(dirEnergy):
 
         ########### train ###########
         print()
@@ -22,9 +32,9 @@ def train_tract_naive(protoList, pairList_train, pairList_test, target):
 
         # get weather data in train_pairs for the prototype
         data = getAllData4Prototype(prototypeSelect, protoClimate,
-                                    './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv',
-                                    './data/weather input',
-                                    './data/testrun',
+                                    dirEnergy,
+                                    dirWeather,
+                                    dirTypical,
                                     target
                                     )
         data = data[['Date/Time', target]]
@@ -48,7 +58,7 @@ def train_tract_naive(protoList, pairList_train, pairList_test, target):
             # get true data
             weatherSelect = str(weatherSelect)
             data_energy = importRawData(
-                './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv/' + prototypeSelect + '____' + weatherSelect + '.csv',
+                dirEnergyTarget + '/' + prototypeSelect + '____' + weatherSelect + '.csv',
                 col = target,
             )
 

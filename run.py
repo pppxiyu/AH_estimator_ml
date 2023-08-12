@@ -3,11 +3,15 @@ import time
 from models.LSTM import *
 from models.biLSTM import *
 from models.biLSTM_global import *
+from models.biLSTM_partialGlobal import *
 from models.naive import *
 from models.linear import *
 from models.mlp import *
-from utils.preprocess import *
+
 from utils.tract import *
+import utils.preprocess as pp
+import utils.tract as tr
+
 from utils.eval import cv_mean_absolute_error
 import config
 
@@ -25,8 +29,22 @@ if __name__ == '__main__':
     target_tractLevel = config.target_tractLevel
     saveFolderHead = config.saveFolderHead
     randomSeed = config.randomSeed
+    dirTargetYear = config.dirTargetYear
 
-    # 0.0 randomness
+    dir_buildingMeta = './data/building_metadata/building_metadata.csv'
+    dir_energyData = './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'
+    dir_weatherData = './data/weather input/2018'
+    dir_typicalData = './data/testrun'
+    dirList = [dir_energyData, dir_weatherData, dir_typicalData]
+    if dirTargetYear != None:
+        dirList.append(dirTargetYear[0])
+        dirList.append(dirTargetYear[1])
+        dirList.append(dirTargetYear[2])
+
+    dir_trueTractData = './data/hourly_heat_energy/annual_2018_tract.csv'
+    if dirTargetYear != None:
+        dir_trueTractData = dirTargetYear[3]
+
     np.random.seed(randomSeed)
 
     # 0.1 create a dir for saving results
@@ -41,20 +59,26 @@ if __name__ == '__main__':
         with open(dirName + '/' + "./config.py", 'wb') as dst_file:
             dst_file.write(src_file.read())
 
+
     # 1.0 training and predicting
-    pairListTrain, pairListTest = splitBuildingWeatherPair('./data/building_metadata/building_metadata.csv')
+    pairListTrain, pairListTest = tr.splitBuildingWeatherPair(dir_buildingMeta)
+
+    if dirTargetYear != None:
+        pairListTrain = pairListTrain + pairListTest
+        pairListTest = pairListTrain
+
     with open(dirName + '/pairListTrain.json', 'w') as f:
         json.dump(pairListTrain, f)
     with open(dirName + '/pairListTest.json', 'w') as f:
         json.dump(pairListTest, f)
 
     if modelName == 'naive':
-        prediction_tract = train_tract_naive(getAllPrototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+        prediction_tract = train_tract_naive(dirList,
                                              pairListTrain, pairListTest,
                                              target = target_buildingLevel
                                              )
     if modelName == 'LSTM':
-        prediction_tract = train_tract_LSTM(getAllPrototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+        prediction_tract = train_tract_LSTM(dirList,
                                             pairListTrain, pairListTest,
                                             features,
                                             target = target_buildingLevel,
@@ -63,7 +87,7 @@ if __name__ == '__main__':
                                             maxEpoch=maxEpoch,
                                             )
     if modelName == 'biLSTM':
-        prediction_tract = train_tract_biRNN(getAllPrototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+        prediction_tract = train_tract_biRNN(dirList,
                                              pairListTrain, pairListTest,
                                              features,
                                              target = target_buildingLevel,
@@ -72,31 +96,43 @@ if __name__ == '__main__':
                                              maxEpoch = maxEpoch,
                                              )
     if modelName == 'linear':
-        prediction_tract = train_tract_linear(getAllPrototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+        prediction_tract = train_tract_linear(dirList,
                                              pairListTrain, pairListTest,
                                              features,
                                              target = target_buildingLevel,
                                              lag = lag,
                                              )
     if modelName == 'mlp':
-        prediction_tract = train_tract_mlp(getAllPrototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
-                                             pairListTrain, pairListTest,
-                                             features,
-                                             target = target_buildingLevel,
-                                             lag = lag,
-                                             )
+        prediction_tract = train_tract_mlp(dirList,
+                                           pairListTrain, pairListTest,
+                                           features,
+                                           target = target_buildingLevel,
+                                           lag = lag,
+                                           )
 
     if modelName == 'biLSTM_global':
-        prediction_tract = train_tract_biRNN_global(getAllPrototype('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+        prediction_tract = train_tract_biRNN_global(pp.getAllPrototype(dir_energyData),
                                                     pairListTrain, pairListTest,
                                                     features,
                                                     target = target_buildingLevel,
                                                     lag = lag,
                                                     tuneTrail = tuneTrail,
                                                     maxEpoch = maxEpoch,
-                                                    metaDataDir = './data/building_metadata/building_metadata.csv',
+                                                    metaDataDir = dir_buildingMeta,
                                                     randomSeed = randomSeed,
                                                     )
+
+    if modelName == 'biLSTM_partialGlobal':
+        prediction_tract = train_tract_biRNN_partialGlobal(pp.getAllPrototype(dir_energyData),
+                                                           pairListTrain, pairListTest,
+                                                           features,
+                                                           target = target_buildingLevel,
+                                                           lag = lag,
+                                                           tuneTrail = tuneTrail,
+                                                           maxEpoch = maxEpoch,
+                                                           metaDataDir = dir_buildingMeta,
+                                                           randomSeed = randomSeed,
+                                                           )
 
     if not os.path.exists(dirName + '/buildingLevel'):
         os.makedirs(dirName + '/buildingLevel')
@@ -104,37 +140,41 @@ if __name__ == '__main__':
         df.to_csv(dirName + '/buildingLevel/' + f'{key}.csv')
 
     # 1.1 norm the prediction
-    # prototypeArea = getBuildingArea_prototype('C:/Users/xiyu/Downloads/output_data/output_data/EP_output/result_ann_WRF_2018',
-    #                                              verbose = 0)
+    # prototypeArea = getBuildingArea_prototype('C:/Users/xiyu/Downloads/output_data/output_data/EP_output/result_ann_WRF_2018', verbose = 0)
+    # used for generate the prototype areas, do not have to do it again
+
     with open('./data/building_metadata/prototypeArea.json', 'r') as f:
         prototypeArea = json.load(f)
-    prediction_tract_norm = normalize_perM2(prediction_tract, pairListTest, prototypeArea)
+    prediction_tract_norm = tr.normalize_perM2(prediction_tract, pairListTest, prototypeArea)
 
-    # 2.0 get metadata of tracts and remove tracts with weather not in the test pairs
-    tractBuildingMeta = getBuildingArea_tracts('./data/building_metadata/building_metadata.csv', pairListTest)
-    tractNameRemove = getTracts_remove('./data/building_metadata/building_metadata.csv', tractBuildingMeta)
+
+    # 2.0 get metadata of tracts and remove tracts with the weather not in the test pairs
+    tractBuildingMeta = tr.getBuildingArea_tracts(dir_buildingMeta, pairListTest)
+
+    tractNameRemove = tr.getTracts_remove(dir_buildingMeta, tractBuildingMeta)
     tractBuildingMeta = tractBuildingMeta[~tractBuildingMeta['id.tract'].isin(tractNameRemove)]
 
     # 2.1 scaling up
-    estimate_tract = predict_tracts(prediction_tract_norm, tractBuildingMeta)
+    estimate_tract = tr.predict_tracts(prediction_tract_norm, tractBuildingMeta)
 
     endTime = time.time()
     executionTime = endTime - startTime
 
-    # 3 get true data and remove tract with weather that is not in the test pairs
-    true_tract = filterTractData(loadTractData('./data/hourly_heat_energy/annual_2018_tract.csv', target_tractLevel),
-                                 estimate_tract)
+
+    # 3 get true data and remove tracts with weather that is not in the test pairs
+    true_tract = tr.filterTractData(tr.loadTractData(dir_trueTractData, target_tractLevel),
+                                    estimate_tract)
     true_tract = true_tract[~true_tract.geoid.isin(tractNameRemove)]
 
     # 4 eval
-    tractsDf = combineEstimateTrue(true_tract, estimate_tract, target_tractLevel)
+    tractsDf = tr.combineEstimateTrue(true_tract, estimate_tract, target_tractLevel)
     tractsDf.to_csv(dirName + '/' + 'tractsDF.csv')
 
-    getTractLevelMetrics(tractsDf,
-                         './saved/estimates_tracts/' + experimentLabel,
-                         executionTime,
-                         )
-    plotPrototypeLevelMetrics(prediction_tract,
-        './saved/estimates_tracts/' + experimentLabel,
-        cv_mean_absolute_error_wAbs,
-        'CVMAE_wAbs')
+    tr.getTractLevelMetrics(tractsDf,
+                            './saved/estimates_tracts/' + experimentLabel,
+                            executionTime,
+                            )
+    tr.plotPrototypeLevelMetrics(prediction_tract,
+                                 './saved/estimates_tracts/' + experimentLabel,
+                                 cv_mean_absolute_error_wAbs,
+                                 'CVMAE_wAbs')
