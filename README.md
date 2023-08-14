@@ -1,6 +1,14 @@
-# Surrogate Model for UBEM
+# Surrogate Modeling for UBEM
 
 ## Abstract
+Even with a limited number of building prototypes, urban building energy modeling (UBEM)
+has to consider the microclimates in the region, as the urban heat island effect and the 
+heterogeneous geographical characteristics have an obvious impact on building energy
+performances. The number of simulations needed for UBEM is therefore large, and the 
+computation time could be days long. Surrogate modeling is a promising way to reduce
+the computation time. This repo contains the codes for building surrogate models based
+on the simulation results of a year and estimating the UBEM of other years with different
+microclimates.
 
 ## I/O
 ### Inputs
