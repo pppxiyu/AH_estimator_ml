@@ -129,6 +129,9 @@ Training and estimation:
 ```
 python run.py
 ```
+The repo is tested on a NVIDIA V100 GPU, the running using the default config in this
+repo can be finished within approximatelt 5.5 hours.
+
 
 ## Notes
 
