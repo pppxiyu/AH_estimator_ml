@@ -63,3 +63,4 @@ dirTargetYear = [
     './data/testrun',
     './data/hourly_heat_energy/annual_2016_tract.csv'
     ]
+dayOfWeekJan1 = 5

@@ -1,4 +1,4 @@
-# AH_estimator_ml
+# Surrogate Model for UBEM
 
 ## Abstract
 
@@ -10,6 +10,7 @@ Please refer to the work by [Xu et. al.](https://github.com/IMMM-SFA/xu_etal_202
 for the explaination of the datasets.
 
 Create a dir `./saved/estimates_tracts` in the root dir of the project.
+
 
 ### Outputs
 After configure and run the program, a folder that contains all the outputs for
@@ -30,7 +31,6 @@ target at the building prototype level.
 `config.py` shows the configuration of this experiment, and other files in the 
 `./saved/estimates_tracts/target_model_experimentTime` folder are used for 
 the evaluation and visualization of the estimations.
-
 
 
 
@@ -97,6 +97,8 @@ for typical target values. The last one is the tract level ground truth. Example
 ]
 ```
 
+`dayOfWeekJan1`: int. The day of week of the target year of estimation. 1 incicates Monday and 7 indicates
+Sunday. 
 
 ## Global estimation option
 
@@ -105,8 +107,7 @@ generate better accuracy in some cases, because different prototypes share part 
 and it works as a simple multitasks learning architecture. However, it should be noted that the number of
 samples for the model will increase dramatically, as the samples for each separate model of each prototype
 has been stacked togather. The total size of training and validation `numpy` array with `float32` type
-is about 25GB. Servers with 30GB GPU and CPU memory are recommended to be used for the global esitmation option.
-
+is about 25GB. It is doable to send data to GPU in batches, which is left for further development.
 
 
 
@@ -121,6 +122,30 @@ Training and estimation:
 python run.py
 ```
 
+## Notes
+
+* The typical values of the target is used as a feature. The typical values is obtained
+by using simulations for 2018 at LA airport. 2018 starts from Monday. If the year to be
+estimated does not start from Monday, there will be a shift between estimation and 
+ground truth for some building types. So, the day of week on Jan 1 for target year is a required 
+parameter, which will be introduced on the Configuration section. But Please note
+the day of week on Jan 1 for training data is hard coded as `1`. Please change it in the 
+files under `./model` to revise that if the typical value data is changed.
+
+* 2001 is hard coded in the whole program as the default year. Please update the year
+according to the context.
+
+* Training and testing using all prototypes is very time-consuming for debug purposes. `pairListTrain`
+and `pairListTest` could be re-written to specify the prototype-microclimate pairs used in training and testing. 
+For example:
+    ```
+    pairListTrain = pairListTrain[0:1]
+    pairListTest = pairListTest[0:1]
+    ```
+
+
+
+
 ## Auxiliary files
 `run_preAnalysis.py` conducts preliminary analysis (e.g., visualization, autocorelation plot) 
 on the raw data.
@@ -128,8 +153,5 @@ on the raw data.
 `run_prototypeLevel.py` runs the model for the selected prototype. Keep it for
 debugging purposes.
 
-`run_resumeEval.py` and `run_resumeScaleUp.py` are kept for debugging purposes. They 
-reload the saved estimations on the prototype level and redo the scaling up
-to census tract level or the metrics calculation/visualiztion. Please also
-use `run_resumeEval.py` to run new evaluation functions, 
-if further custom evaluation of the estimation is needed
+`run_resumeEval.py` are kept for debugging and customization purposes. It reloads the saved estimations
+for evaluations. 

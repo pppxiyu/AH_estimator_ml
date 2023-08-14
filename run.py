@@ -30,19 +30,19 @@ if __name__ == '__main__':
     saveFolderHead = config.saveFolderHead
     randomSeed = config.randomSeed
     dirTargetYear = config.dirTargetYear
+    dayOfWeekJan1 = config.dayOfWeekJan1
 
     dir_buildingMeta = './data/building_metadata/building_metadata.csv'
     dir_energyData = './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'
     dir_weatherData = './data/weather input/2018'
     dir_typicalData = './data/testrun'
     dirList = [dir_energyData, dir_weatherData, dir_typicalData]
+    dir_trueTractData = './data/hourly_heat_energy/annual_2018_tract.csv'
+
     if dirTargetYear != None:
         dirList.append(dirTargetYear[0])
         dirList.append(dirTargetYear[1])
         dirList.append(dirTargetYear[2])
-
-    dir_trueTractData = './data/hourly_heat_energy/annual_2018_tract.csv'
-    if dirTargetYear != None:
         dir_trueTractData = dirTargetYear[3]
 
     np.random.seed(randomSeed)
@@ -67,6 +67,10 @@ if __name__ == '__main__':
         pairListTrain = pairListTrain + pairListTest
         pairListTest = pairListTrain
 
+    # only for debugging, it can limit the train and test to selected prototype-weather pairs
+    # pairListTrain = pairListTrain[0:1]
+    # pairListTest = pairListTest[0:1]
+
     with open(dirName + '/pairListTrain.json', 'w') as f:
         json.dump(pairListTrain, f)
     with open(dirName + '/pairListTest.json', 'w') as f:
@@ -75,7 +79,8 @@ if __name__ == '__main__':
     if modelName == 'naive':
         prediction_tract = train_tract_naive(dirList,
                                              pairListTrain, pairListTest,
-                                             target = target_buildingLevel
+                                             target = target_buildingLevel,
+                                             dayOfWeekJan1 =dayOfWeekJan1,
                                              )
     if modelName == 'LSTM':
         prediction_tract = train_tract_LSTM(dirList,
@@ -85,6 +90,7 @@ if __name__ == '__main__':
                                             lag = lag,
                                             tuneTrail=tuneTrail,
                                             maxEpoch=maxEpoch,
+                                            dayOfWeekJan1 = dayOfWeekJan1
                                             )
     if modelName == 'biLSTM':
         prediction_tract = train_tract_biRNN(dirList,
@@ -94,6 +100,7 @@ if __name__ == '__main__':
                                              lag = lag,
                                              tuneTrail = tuneTrail,
                                              maxEpoch = maxEpoch,
+                                             dayOfWeekJan1 = dayOfWeekJan1,
                                              )
     if modelName == 'linear':
         prediction_tract = train_tract_linear(dirList,
@@ -101,6 +108,7 @@ if __name__ == '__main__':
                                              features,
                                              target = target_buildingLevel,
                                              lag = lag,
+                                              dayOfWeekJan1 = dayOfWeekJan1,
                                              )
     if modelName == 'mlp':
         prediction_tract = train_tract_mlp(dirList,
@@ -108,6 +116,7 @@ if __name__ == '__main__':
                                            features,
                                            target = target_buildingLevel,
                                            lag = lag,
+                                           dayOfWeekJan1 = dayOfWeekJan1,
                                            )
 
     if modelName == 'biLSTM_global':
@@ -120,6 +129,7 @@ if __name__ == '__main__':
                                                     maxEpoch = maxEpoch,
                                                     metaDataDir = dir_buildingMeta,
                                                     randomSeed = randomSeed,
+                                                    dayOfWeekJan1 = dayOfWeekJan1,
                                                     )
 
     if modelName == 'biLSTM_partialGlobal':
@@ -132,6 +142,7 @@ if __name__ == '__main__':
                                                            maxEpoch = maxEpoch,
                                                            metaDataDir = dir_buildingMeta,
                                                            randomSeed = randomSeed,
+                                                           dayOfWeekJan1 = dayOfWeekJan1,
                                                            )
 
     if not os.path.exists(dirName + '/buildingLevel'):

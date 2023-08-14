@@ -7,10 +7,10 @@ import numpy as np
 
 def organizePredictTrue(predictionList, sequenceList_test, climateList_test, maxLag):
 #     sequenceLen = sequenceList_test[0].shape[1]
-#     dfTemplate = pd.DataFrame(pd.date_range(start = '2018-01-01 00:00:00', end='2018-12-31 23:00:00', freq = 'H'),
+#     dfTemplate = pd.DataFrame(pd.date_range(start = '2001-01-01 00:00:00', end='2001-12-31 23:00:00', freq = 'H'),
 #                  columns = ['DateTime']).iloc[: -(sequenceLen - 1)]
 
-    dfTemplate = pd.DataFrame(pd.date_range(start = '2018-01-01 00:00:00', end='2018-12-31 23:00:00', freq = 'H'),
+    dfTemplate = pd.DataFrame(pd.date_range(start = '2001-01-01 00:00:00', end='2001-12-31 23:00:00', freq = 'H'),
                  columns = ['DateTime']).iloc[: -maxLag]
     dfList = []
     for prediction, sequence_test, climate in zip(predictionList, sequenceList_test, climateList_test):
@@ -29,7 +29,7 @@ def organizePredictTrue(predictionList, sequenceList_test, climateList_test, max
 
 def organizePredictTrue_biLSTM(predictionList, sequenceList_test, climateList_test):
     sequenceLen = sequenceList_test[0].shape[1]
-    dfTemplate = pd.DataFrame(pd.date_range(start = '2018-01-01 00:00:00', end='2018-12-31 23:00:00', freq = 'H'),
+    dfTemplate = pd.DataFrame(pd.date_range(start = '2001-01-01 00:00:00', end='2001-12-31 23:00:00', freq = 'H'),
                  columns = ['DateTime']).iloc[((sequenceLen - 1) // 2): -((sequenceLen - 1) // 2)]
     dfList = []
     for prediction, sequence_test, climate in zip(predictionList, sequenceList_test, climateList_test):
@@ -48,7 +48,7 @@ def organizePredictTrue_biLSTM(predictionList, sequenceList_test, climateList_te
 
 def organizePredictTrue_linear(predictionList, sequenceList_test, climateList_test, maxLag):
 
-    dfTemplate = pd.DataFrame(pd.date_range(start = '2018-01-01 00:00:00', end='2018-12-31 23:00:00', freq = 'H'),
+    dfTemplate = pd.DataFrame(pd.date_range(start = '2001-01-01 00:00:00', end='2001-12-31 23:00:00', freq = 'H'),
                  columns = ['DateTime']).iloc[: -maxLag]
     dfList = []
 
@@ -68,7 +68,7 @@ def organizePredictTrue_linear(predictionList, sequenceList_test, climateList_te
 
 def organizePredictTrue_mlp(predictionList, sequenceList_test, climateList_test, maxLag):
 
-    dfTemplate = pd.DataFrame(pd.date_range(start = '2018-01-01 00:00:00', end='2018-12-31 23:00:00', freq = 'H'),
+    dfTemplate = pd.DataFrame(pd.date_range(start = '2001-01-01 00:00:00', end='2001-12-31 23:00:00', freq = 'H'),
                  columns = ['DateTime']).iloc[: -maxLag]
     dfList = []
 

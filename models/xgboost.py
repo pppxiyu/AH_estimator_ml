@@ -14,7 +14,7 @@ def xgboost_predict(sequenceList_test, model):
         predictionList.append(prediction)
     return predictionList
 
-def train_tract_xgboost(protoList, pairList_train, pairList_test, featureList, target, lag):
+def train_tract_xgboost(protoList, pairList_train, pairList_test, featureList, target, lag, dayOfWeekJan1):
     # USE: use the building-weather pairs in the train pair set to train
     #      do prediction using the new weathers in the test pair set
     # INPUT: all prototype list, pairs for train, pairs for test, featrue names, target name, lag list, ifTune True or False
@@ -39,6 +39,7 @@ def train_tract_xgboost(protoList, pairList_train, pairList_test, featureList, t
                                     './data/weather input',
                                     './data/testrun',
                                     target,
+                                    1, # hard coded, because typical value is obtained in 2018
                                     )
         # build datasets
         trainX, trainY, valX, valY, _, _ = makeDatasets(protoClimate,
@@ -86,7 +87,7 @@ def train_tract_xgboost(protoList, pairList_train, pairList_test, featureList, t
                                         col = target
                                         )
             data_weatherSelect = importWeatherData('./data/weather input', weatherSelect)
-            data_typical = importTypical('./data/testrun', prototypeSelect, target) # for adding the typical
+            data_typical = importTypical('./data/testrun', prototypeSelect, target, dayOfWeekJan1) # for adding the typical
             data = pd.concat([data_energy, data_weatherSelect, data_typical], axis = 1)
             dataShort = data[[target] + featureList]
             sequences_weatherSelect = sequencesGeneration(dataShort, lag, featureList, target)
@@ -99,8 +100,8 @@ def train_tract_xgboost(protoList, pairList_train, pairList_test, featureList, t
             # record prediction
             predictionDF = pd.DataFrame(prediction[:, 0], columns = ['estimate'])
             predictionDF['true'] = sequences_weatherSelect[:, -1, 0]
-            predictionDF['DateTime'] = pd.date_range(start = '2018-01-01 00:00:00',
-                                                     end = '2018-12-31 23:00:00', freq = 'H').to_series().iloc[lag[-1]:].to_list()
+            predictionDF['DateTime'] = pd.date_range(start = '2001-01-01 00:00:00',
+                                                     end = '2001-12-31 23:00:00', freq = 'H').to_series().iloc[lag[-1]:].to_list()
             predictionDict[prototypeSelect + '____' + weatherSelect] = predictionDF
 
     return predictionDict

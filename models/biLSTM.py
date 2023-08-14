@@ -32,7 +32,8 @@ class biLSTM_tuner(kt.HyperModel):
     def build(self, hp):
         hp_units = hp.Int('units', min_value = 256, max_value = 512, step = 128)
         model = biLSTM(hp_units)
-        hp_lr = hp.Float('learningRate', 0.0005, 0.0015, step = 0.0005)
+        # hp_lr = hp.Float('learningRate', 0.0005, 0.001, step = 0.0005)
+        hp_lr = 0.001
         model.compile(optimizer = keras.optimizers.Adam(learning_rate = hp_lr), loss = "mse")
         return model
 
@@ -58,7 +59,7 @@ def biLSTM_predict(sequenceList_test, tuner):
         predictionList.append(prediction)
     return predictionList
 
-def train_tract_biRNN(dirs, pairList_train, pairList_test, featureList, target, lag, tuneTrail, maxEpoch):
+def train_tract_biRNN(dirs, pairList_train, pairList_test, featureList, target, lag, tuneTrail, maxEpoch, dayOfWeekJan1):
     # USE: use the building-weather pairs in the train pair set to train
     #      do prediction using the new weathers in the test pair set
     # INPUT: all prototype list, pairs for train, pairs for test, featrue names, target name, lag list, ifTune True or False
@@ -79,8 +80,8 @@ def train_tract_biRNN(dirs, pairList_train, pairList_test, featureList, target, 
 
     # for each of the prototype
     predictionDict = {}
-    for prototypeSelect in getAllPrototype(dirEnergy):
-
+    # for prototypeSelect in getAllPrototype(dirEnergy):
+    for prototypeSelect in sorted(list(set([item[0] for item in pairList_test]))):
         ########### train ###########
         print()
         print('---------- Modeling: ', prototypeSelect, ' ----------')
@@ -96,6 +97,7 @@ def train_tract_biRNN(dirs, pairList_train, pairList_test, featureList, target, 
                                     dirWeather,
                                     dirTypical,
                                     target,
+                                    1, # hard coded, because typical value is obtained in 2018
                                     )
         # build datasets
         trainX, trainY, valX, valY, _, _ = makeDatasets(protoClimate,
@@ -143,7 +145,7 @@ def train_tract_biRNN(dirs, pairList_train, pairList_test, featureList, target, 
                 )
             data_weatherSelect = importWeatherData(dirWeatherTarget, weatherSelect)
             data_typical = importTypical(dirTypicalTarget, prototypeSelect,
-                                         target)
+                                         target, dayOfWeekJan1)
             data = pd.concat([data_energy, data_weatherSelect, data_typical], axis=1)
             dataShort = data[[target] + featureList]
             sequences = sequencesGeneration(dataShort, lag, featureList, target)
@@ -156,7 +158,7 @@ def train_tract_biRNN(dirs, pairList_train, pairList_test, featureList, target, 
             lagShift = (len(lag) + 1) // 2
             predictionDF = pd.DataFrame(prediction[:, 0], columns = ['estimate'])
             predictionDF['true'] = sequences[:, lagShift: (lagShift + 1), 0]
-            predictionDF['DateTime'] = pd.date_range(start='2018-01-01 00:00:00', end='2018-12-31 23:00:00',
+            predictionDF['DateTime'] = pd.date_range(start='2001-01-01 00:00:00', end='2001-12-31 23:00:00',
                                                      freq='H').to_series().iloc[lagShift: -lagShift].to_list()
             predictionDict[prototypeSelect + '____' + weatherSelect] = predictionDF
 

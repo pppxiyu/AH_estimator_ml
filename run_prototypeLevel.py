@@ -228,7 +228,7 @@ print('Percentage of correct peak timing is: ', (np.intersect1d(peaks_predict_in
 
 # # vis
 # coolingElec(dfEval, testClimateList,
-#             ('2018-01-01 00:00:00', '2018-12-31 23:00:00'),
+#             ('2001-01-01 00:00:00', '2001-12-31 23:00:00'),
 #             (1, 1),
 #             [(1, 1)],
 #             './figs/test_0101-1231_College-90_1-2004-ASHRAE 169-2013-3B.html')

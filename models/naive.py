@@ -2,7 +2,7 @@ import warnings
 from utils.preprocess import *
 from utils.tract import *
 
-def train_tract_naive(dirs, pairList_train, pairList_test, target):
+def train_tract_naive(dirs, pairList_train, pairList_test, target, dayOfWeekJan1):
     # USE:
     # INPUT: all prototype list, pairs for train, pairs for test, featrue names, target name, lag list, ifTune True or False
     # OUTPUT: dict, each value is the prediction for a pair in the test pair set
@@ -35,7 +35,8 @@ def train_tract_naive(dirs, pairList_train, pairList_test, target):
                                     dirEnergy,
                                     dirWeather,
                                     dirTypical,
-                                    target
+                                    target,
+                                    1, # hard coded, because typical value is obtained in 2018
                                     )
         data = data[['Date/Time', target]]
 
@@ -65,7 +66,7 @@ def train_tract_naive(dirs, pairList_train, pairList_test, target):
             # record prediction
             predictionDF = pd.DataFrame(prediction, columns=['estimate'])
             predictionDF['true'] = data_energy[target]
-            predictionDF['DateTime'] = pd.date_range(start='2018-01-01 00:00:00', end='2018-12-31 23:00:00',
+            predictionDF['DateTime'] = pd.date_range(start='2001-01-01 00:00:00', end='2001-12-31 23:00:00',
                                                      freq='H').to_series().to_list()
             predictionDict[prototypeSelect + '____' + weatherSelect] = predictionDF
 

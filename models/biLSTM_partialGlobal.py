@@ -81,7 +81,7 @@ class biLSTM_tuner_partialGlobal(kt.HyperModel):
             **kwargs,
         )
 
-def train_tract_biRNN_partialGlobal(dirs, pairList_train, pairList_test, featureList, target, lag, tuneTrail, maxEpoch, metaDataDir, randomSeed):
+def train_tract_biRNN_partialGlobal(dirs, pairList_train, pairList_test, featureList, target, lag, tuneTrail, maxEpoch, metaDataDir, randomSeed, dayOfWeekJan1):
     # USE: use the building-weather pairs in the train pair set to train
     #      do prediction using the new weathers in the test pair set
     # INPUT: all prototype list, pairs for train, pairs for test, featrue names, target name, lag list, ifTune True or False
@@ -136,6 +136,7 @@ def train_tract_biRNN_partialGlobal(dirs, pairList_train, pairList_test, feature
                                       dirWeather,
                                       dirTypical,
                                       target,
+                                      1, # hard coded, because typical value is obtained in 2018
                                       )
         data_1['prototype'] = prototypeSelect
         dfList.append(data_1)
@@ -300,7 +301,7 @@ def train_tract_biRNN_partialGlobal(dirs, pairList_train, pairList_test, feature
                 )
             data_weatherSelect = importWeatherData(dirWeatherTarget, weatherSelect)
             data_typical = importTypical(dirTypicalTarget, prototypeSelect,
-                                         target)
+                                         target, dayOfWeekJan1)
 
             # data_encodes = encodingDf[['prototype_' + prototypeSelect]].transpose() # one-hot encoding
             data_encodes = encodingDf[encodingDf['prototype'] == prototypeSelect][['targetMean']] # target-mean encoding
@@ -318,7 +319,7 @@ def train_tract_biRNN_partialGlobal(dirs, pairList_train, pairList_test, feature
             lagShift = (len(lag) + 1) // 2
             predictionDF = pd.DataFrame(prediction[:, 0], columns = ['estimate'])
             predictionDF['true'] = sequences[:, lagShift: (lagShift + 1), 0]
-            predictionDF['DateTime'] = pd.date_range(start='2018-01-01 00:00:00', end='2018-12-31 23:00:00',
+            predictionDF['DateTime'] = pd.date_range(start='2001-01-01 00:00:00', end='2001-12-31 23:00:00',
                                                      freq='H').to_series().iloc[lagShift: -lagShift].to_list()
             predictionDict[prototypeSelect + '____' + weatherSelect] = predictionDF
 
