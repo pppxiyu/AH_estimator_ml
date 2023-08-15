@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 
 
 ## sampling ####################
-def splitBuildingWeatherPair(addr):
+def splitBuildingWeatherPair_byWeather(addr, testPortion = 0.15):
     # USE: randomly select some weather zones for test
     #      make sure the training pairs have all building types
     #      return pairs for training and test
@@ -34,7 +34,7 @@ def splitBuildingWeatherPair(addr):
     # split train and test config
     climates = buildingMeta_grouped_pair.index.get_level_values(1).unique().values
     num_climate = buildingMeta_grouped_pair.index.get_level_values(1).nunique()
-    indices = np.random.choice(climates.size, size=math.floor(num_climate * 0.15), replace=False)
+    indices = np.random.choice(climates.size, size=math.floor(num_climate * testPortion), replace=False)
     mask = np.ones(climates.size, dtype=bool)
     mask[indices] = False
     climates_select = climates[indices]  # select climates for test
@@ -53,6 +53,33 @@ def splitBuildingWeatherPair(addr):
 
     return pairList_train, pairList_test
 
+def splitBuildingWeatherPair_byProto(addr, testPortion = 0.9):
+    # USE: randomly select some weather zones for test
+    #      make sure the training pairs have all building types
+    #      return pairs for training and test
+    # INPUT: building meta data csv
+    # OUTPUT: lists of tuples, each tuple has building type and weather ID
+
+    # get the count of each prototype
+    buildingMeta = pd.read_csv(addr)
+    buildingMeta_pair = buildingMeta.groupby(['idf.kw', 'id.grid.coarse']).count()
+    buildingMeta_pair = buildingMeta_pair.reset_index()[['idf.kw', 'id.grid.coarse']]
+    buildingMeta_proto = buildingMeta_pair.groupby('idf.kw').count()
+    # get the count of selection for each prototype
+    buildingMeta_proto['selectCount'] = buildingMeta_proto['id.grid.coarse'] * (1 - testPortion)
+    buildingMeta_proto['selectCount'] = buildingMeta_proto['selectCount'].round().astype(int)
+    buildingMeta_proto.loc[buildingMeta_proto['selectCount'] <= 1, 'selectCount'] = 2
+    # randomly select pairs according to buildingMeta_proto
+    selectCount_proto = buildingMeta_proto['selectCount'].to_dict()
+    trainPairs = buildingMeta_pair.groupby('idf.kw').apply(lambda x: x.sample(selectCount_proto[x.name])).reset_index(drop = True)
+    # take off train pairs for all pairs and get test pairs
+    trainPairsList = (trainPairs['idf.kw'] + trainPairs['id.grid.coarse'].astype(str)).tolist()
+    buildingMeta_pair['pair'] = buildingMeta_pair['idf.kw'] + buildingMeta_pair['id.grid.coarse'].astype(str)
+    testPairs = buildingMeta_pair[~buildingMeta_pair['pair'].isin(trainPairsList)]
+    # output
+    trainPairs_out = [tuple(x) for x in trainPairs.to_numpy()]
+    testPairs_out = [tuple(x) for x in testPairs.to_numpy()]
+    return trainPairs_out, testPairs_out
 
 ## normalize to per m2 #########################
 def getBuildingArea_prototype(addr, verbose = 0):
@@ -106,16 +133,50 @@ def normalize_perM2(predictionDict, pairList_test, buildingArea_dict):
 
 
 #### scale up to tracts ######################
-def getBuildingArea_tracts(addr, pairList_test):
-    # USE: get the building area of each prototype-weather pair for all tracts
+def getBuildingArea_tracts_legacy(addr, pairList_test):
+    # USE: get the building area of each prototype-weather pair for test tracts
     # INPUT: building meta data csv file
     # OUTPUT: df, with tract, building type, weather column, and the corresponding building area
+
     buildingMeta = pd.read_csv(addr)
+
     pairList_test_idgridcoarse = [item[1] for item in pairList_test] # weather
+
     buildingMeta_forTest = buildingMeta[buildingMeta['id.grid.coarse'].isin(pairList_test_idgridcoarse)]
     buildingMeta_forTest_tract = buildingMeta_forTest.groupby(['id.tract', 'idf.kw', 'id.grid.coarse'])['building.area.m2'].sum()
     buildingMeta_forTest_tract = buildingMeta_forTest_tract.reset_index()
     return buildingMeta_forTest_tract
+
+
+def getBuildingArea_tracts(addr, pairList_test):
+    # USE: get the building area of each prototype-weather pair for test tracts
+    # INPUT: building meta data csv file
+    # OUTPUT: df, with tract, building type, weather column, and the corresponding building area
+
+    buildingMeta = pd.read_csv(addr)
+    # select the tracts that can be formed using the pairs in pairList_test
+    # get all pairs in the meta
+    buildingMeta_grouped = buildingMeta.groupby(['id.tract', 'idf.kw', 'id.grid.coarse']).sum()[['building.area.m2']].reset_index()
+    buildingMeta_grouped['pair'] = buildingMeta_grouped['idf.kw'] + '_' + buildingMeta_grouped['id.grid.coarse'].astype(str)
+    # get all pairs for test
+    pairList_test_concat = [item[0] + '_' + str(item[1]) for item in pairList_test]
+    # select the pairs in meta
+    buildingMeta_grouped_reduced = buildingMeta_grouped[buildingMeta_grouped['pair'].isin(pairList_test_concat)]
+    # get the tracts whose pairs all survive in the selection
+    pairsInTracts_after = buildingMeta_grouped_reduced.groupby(['id.tract']).count()[['pair']]
+    pairsInTracts_before = buildingMeta_grouped.groupby(['id.tract']).count()[['pair']]
+    pairsInTracts_merge = pairsInTracts_after.merge(pairsInTracts_before, how = 'left',
+                                                    left_on = pairsInTracts_after.index,
+                                                    right_on = pairsInTracts_before.index,
+                                                    suffixes=('_after', '_before'),
+                                                    )
+    pairsInTracts_final = pairsInTracts_merge[pairsInTracts_merge['pair_after'] == pairsInTracts_merge['pair_before']]
+    tract4test = pairsInTracts_final['key_0'].tolist()
+    # output selected building meta
+    buildingMeta4test = buildingMeta.groupby(['id.tract', 'idf.kw', 'id.grid.coarse'])['building.area.m2'].sum().reset_index()
+    buildingMeta4test = buildingMeta4test[buildingMeta4test['id.tract'].isin(tract4test)]
+    return buildingMeta4test
+
 
 def getTracts_remove(addr, tractsMeta):
     # USE: get the names of tracts that having weather not in test set

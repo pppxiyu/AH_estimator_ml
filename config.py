@@ -51,16 +51,17 @@ maxEpoch = 500
 target_tractLevel = 'energy.elec'
 
 # results saving for further eval
-saveFolderHead = 'energyElec_biLSTM'
+saveFolderHead = 'energyElec_biLSTM_10PerData'
 
 # random seed
 randomSeed = 1
 
 # target year
-dirTargetYear = [
-    './data/hourly_heat_energy/sim_result_ann_WRF_2016_csv',
-    './data/weather input/2016',
-    './data/testrun',
-    './data/hourly_heat_energy/annual_2016_tract.csv'
-    ]
-dayOfWeekJan1 = 5
+# dirTargetYear = [
+#     './data/hourly_heat_energy/sim_result_ann_WRF_2016_csv',
+#     './data/weather input/2016',
+#     './data/testrun',
+#     './data/hourly_heat_energy/annual_2016_tract.csv'
+#     ]
+dirTargetYear = None
+dayOfWeekJan1 = 1

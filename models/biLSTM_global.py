@@ -100,7 +100,8 @@ def train_tract_biRNN_global(dirs, pairList_train, pairList_test, featureList, t
         dirTypicalTarget = dirTypical
         print('Evaluation mode. Train and test data are in same year.')
 
-    protoList = getAllPrototype(dirEnergy)
+    # protoList = getAllPrototype(dirEnergy)
+    protoList = sorted(list(set([item[0] for item in pairList_test])))
 
     ###################### Merging data for all prototype and ecoding feature ##################
     try: # check if there is saved data

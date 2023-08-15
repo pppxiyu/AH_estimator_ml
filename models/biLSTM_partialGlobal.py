@@ -100,7 +100,8 @@ def train_tract_biRNN_partialGlobal(dirs, pairList_train, pairList_test, feature
         dirTypicalTarget = dirTypical
         print('Evaluation mode. Train and test data are in same year.')
 
-    protoList = getAllPrototype(dirEnergy)
+    # protoList = getAllPrototype(dirEnergy)
+    protoList = sorted(list(set([item[0] for item in pairList_test])))
 
     ###################### Edit pairLists to select prototypes in the group ####################
     protoListSelected = ['SingleFamily', 'MultiFamily']

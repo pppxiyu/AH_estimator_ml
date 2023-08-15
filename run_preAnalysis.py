@@ -75,14 +75,21 @@ from utils.preprocessVis import *
 
 
 # Weather feature analysis
-# weatherDf = getAllClimatesData(getAllClimates('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
-#                                './data/weather input')
-# pearsonCorr = weatherDf[['Climate', 'RH']].pivot(columns = 'Climate', values = 'RH').corr(method = 'pearson')
-# pearsonCorr.to_csv('./saved/climateCorr/climateCorr.csv')
+weatherDf2018 = getAllClimatesData(getAllClimates('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+                                   './data/weather input/2018')
+weatherDf2018 = weatherDf2018[['Climate', 'SWDOWN']]
+weatherDf2018 = weatherDf2018.pivot(columns='Climate', values='SWDOWN').reset_index(drop=True)
+weatherDf2018 = weatherDf2018.rename(columns = {'SWDOWN': 'SWDOWN_2018'})
 
-# office2004 = pd.read_csv('./saved/estimates_tracts/energyElec_biLSTM_2023-07-20-20-04-01/buildingLevel/SmallOffice-90_1-2004-ASHRAE 169-2013-3B____10.csv')
-# office2004.iloc[1000:2000].estimate.plot()
-# office2004.iloc[1000:2000].true.plot()
-# plt.show()
+weatherDf2016 = getAllClimatesData(getAllClimates('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
+                                   './data/weather input/2016')
+weatherDf2016 = weatherDf2016[['Climate', 'SWDOWN']]
+weatherDf2016 = weatherDf2016.pivot(columns='Climate', values='SWDOWN').reset_index(drop=True)
+weatherDf2016 = weatherDf2016.rename(columns = {'SWDOWN': 'SWDOWN_2016'})
 
-# print()
+weatherDf = pd.concat([weatherDf2018, weatherDf2016], axis = 1)
+weatherDf = weatherDf.sort_index(axis = 1)
+
+
+
+print()

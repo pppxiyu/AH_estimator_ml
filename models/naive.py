@@ -19,8 +19,8 @@ def train_tract_naive(dirs, pairList_train, pairList_test, target, dayOfWeekJan1
 
     # for each of the prototype
     predictionDict = {}
-    for prototypeSelect in getAllPrototype(dirEnergy):
-
+    # for prototypeSelect in getAllPrototype(dirEnergy):
+    for prototypeSelect in sorted(list(set([item[0] for item in pairList_test]))):
         ########### train ###########
         print()
         print('---------- Modeling: ', prototypeSelect, ' ----------')

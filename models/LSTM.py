@@ -119,7 +119,8 @@ def train_tract_LSTM(dirs, pairList_train, pairList_test, featureList, target, l
 
     # for each of the prototype
     predictionDict = {}
-    for prototypeSelect in getAllPrototype(dirEnergy):
+    # for prototypeSelect in getAllPrototype(dirEnergy):
+    for prototypeSelect in sorted(list(set([item[0] for item in pairList_test]))):
 
         ########### train ###########
         print()

@@ -3,10 +3,11 @@ import utils.eval as ev
 import pandas as pd
 import json
 import os
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
 
-    mode = 'others'
+    mode = 'singleExp_afterAnalysis'
 
     if mode == 'singleExp_resumeAnalysis':
         # 1.1 norm the prediction
@@ -17,14 +18,6 @@ if __name__ == '__main__':
         target_tractLevel = 'energy.elec'
         with open('./saved/estimates_tracts/' + experimentLabel + '/pairListTest.json', 'r') as f:
             pairListTest = json.load(f)
-        #
-        # csvPath = './saved/estimates_tracts/' + experimentLabel + '/buildingLevel'
-        # csv_files = [f for f in os.listdir(csvPath) if f.endswith('.csv')]
-        # prediction_tract = {}
-        # for file in csv_files:
-        #     file_path = os.path.join(csvPath, file)
-        #     df = pd.read_csv(file_path)
-        #     prediction_tract[file[:-4]] = df
 
         dir_buildingMeta = './data/building_metadata/building_metadata.csv'
         predPrototypeLevel = tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experimentLabel + '/buildingLevel')
@@ -65,8 +58,8 @@ if __name__ == '__main__':
 
     if mode == 'singleExp_afterAnalysis':
         ######## eval for each experiment
-        experimentLabel = 'energyElec_biLSTM_2023-07-20-20-04-01'
-        predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
+        experimentLabel = 'energyElec_2023-08-14-23-39-42'
+        # predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
         predPrototypeLevel = tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experimentLabel + '/buildingLevel')
 
         # output the metrics for each prototype
@@ -78,18 +71,18 @@ if __name__ == '__main__':
                                             ev.cv_mean_absolute_error_wAbs,
                                             'CVMAE_wAbs')
 
-        # output the metrics at tract level
-        tr.getTractLevelMetrics(predTractLevel, './saved/estimates_tracts/' + experimentLabel)
-        tr.plotTractLevelPredictionLine(predTractLevel,
-                                     predTractLevel.geoid.sample(1).iloc[0],
-                                     './saved/estimates_tracts/' + experimentLabel)
+        # # output the metrics at tract level
+        # tr.getTractLevelMetrics(predTractLevel, './saved/estimates_tracts/' + experimentLabel)
+        # tr.plotTractLevelPredictionLine(predTractLevel,
+        #                              predTractLevel.geoid.sample(1).iloc[0],
+        #                              './saved/estimates_tracts/' + experimentLabel)
 
     if mode == 'crossExp':
         ######### eval across experiments
 
         # prototype level metrics of several targets
         experimentLabels = [
-            'energyElec_biLSTM_2023-07-20-20-04-01',
+            'energyElec_biLSTM_2023-08-14-03-11-39',
             # 'energyElec_biLSTM_2023-07-20-20-04-01',
         ]
         prototypeLevelMetrics = []
@@ -111,7 +104,22 @@ if __name__ == '__main__':
 
     if mode == 'others':
         ######## other test
-        experimentLabel = 'energyElec_biLSTM_2023-08-13-14-01-13'
+        experimentLabel = 'energyElec_biLSTM_2023-07-20-20-04-01'
         predPrototypeLevel = tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experimentLabel + '/buildingLevel')
-        df = list(predPrototypeLevel.values())[0]
+        df = predPrototypeLevel['SingleFamily-2004____91']
+
+        experimentLabel2 = 'energyElec_biLSTM_2023-08-14-03-11-39'
+        predPrototypeLevel2 = tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experimentLabel2 + '/buildingLevel')
+        df2 = predPrototypeLevel2['SingleFamily-2004____91']
+
+        df['estimate'].iloc[2100:2300].plot()
+        df['true'].iloc[2100:2300].plot()
+        plt.legend()
+        plt.show()
+
+        df2['estimate'].iloc[2100:2300].plot()
+        df2['true'].iloc[2100:2300].plot()
+        plt.legend()
+        plt.show()
+
         print()

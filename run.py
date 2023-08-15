@@ -60,22 +60,30 @@ if __name__ == '__main__':
             dst_file.write(src_file.read())
 
 
-    # 1.0 training and predicting
-    pairListTrain, pairListTest = tr.splitBuildingWeatherPair(dir_buildingMeta)
+    # 1.0 set training and testing set
+    # Option 1: split data using microclimates
+    # pairListTrain, pairListTest = tr.splitBuildingWeatherPair_byWeather(dir_buildingMeta, 0.85)
 
+    # Option 2: make train and test set same but in different year
     if dirTargetYear != None:
         pairListTrain = pairListTrain + pairListTest
         pairListTest = pairListTrain
 
-    # only for debugging, it can limit the train and test to selected prototype-weather pairs
+    # Option 3: only for debugging, it can limit the train and test to selected prototype-weather pairs
     # pairListTrain = pairListTrain[0:1]
     # pairListTest = pairListTest[0:1]
+    # pairListTrain = [i for i in pairListTrain if i[0] == 'SingleFamily-2004']
+    # pairListTest = [i for i in pairListTest if i[0] == 'SingleFamily-2004']
+
+    # Option 4: split train and test set for each of the prototype
+    pairListTrain, pairListTest = tr.splitBuildingWeatherPair_byProto(dir_buildingMeta, 0.95)
 
     with open(dirName + '/pairListTrain.json', 'w') as f:
         json.dump(pairListTrain, f)
     with open(dirName + '/pairListTest.json', 'w') as f:
         json.dump(pairListTest, f)
 
+    # 1.1 train
     if modelName == 'naive':
         prediction_tract = train_tract_naive(dirList,
                                              pairListTrain, pairListTest,
@@ -150,7 +158,7 @@ if __name__ == '__main__':
     for key, df in prediction_tract.items():
         df.to_csv(dirName + '/buildingLevel/' + f'{key}.csv')
 
-    # 1.1 norm the prediction
+    # 1.2 norm the prediction
     # prototypeArea = getBuildingArea_prototype('C:/Users/xiyu/Downloads/output_data/output_data/EP_output/result_ann_WRF_2018', verbose = 0)
     # used for generate the prototype areas, do not have to do it again
 
@@ -161,9 +169,8 @@ if __name__ == '__main__':
 
     # 2.0 get metadata of tracts and remove tracts with the weather not in the test pairs
     tractBuildingMeta = tr.getBuildingArea_tracts(dir_buildingMeta, pairListTest)
-
-    tractNameRemove = tr.getTracts_remove(dir_buildingMeta, tractBuildingMeta)
-    tractBuildingMeta = tractBuildingMeta[~tractBuildingMeta['id.tract'].isin(tractNameRemove)]
+    # tractNameRemove = tr.getTracts_remove(dir_buildingMeta, tractBuildingMeta)
+    # tractBuildingMeta = tractBuildingMeta[~tractBuildingMeta['id.tract'].isin(tractNameRemove)]
 
     # 2.1 scaling up
     estimate_tract = tr.predict_tracts(prediction_tract_norm, tractBuildingMeta)
@@ -175,7 +182,7 @@ if __name__ == '__main__':
     # 3 get true data and remove tracts with weather that is not in the test pairs
     true_tract = tr.filterTractData(tr.loadTractData(dir_trueTractData, target_tractLevel),
                                     estimate_tract)
-    true_tract = true_tract[~true_tract.geoid.isin(tractNameRemove)]
+    # true_tract = true_tract[~true_tract.geoid.isin(tractNameRemove)]
 
     # 4 eval
     tractsDf = tr.combineEstimateTrue(true_tract, estimate_tract, target_tractLevel)
