@@ -3,12 +3,11 @@ import time
 from models.LSTM import *
 from models.biLSTM import *
 from models.biLSTM_global import *
-from models.biLSTM_partialGlobal import *
 from models.naive import *
 from models.linear import *
 from models.mlp import *
 
-from utils.tract import *
+# from utils.tract import *
 import utils.preprocess as pp
 import utils.tract as tr
 
@@ -31,6 +30,7 @@ if __name__ == '__main__':
     randomSeed = config.randomSeed
     dirTargetYear = config.dirTargetYear
     dayOfWeekJan1 = config.dayOfWeekJan1
+    testDataPer = config.testDataPer
 
     dir_buildingMeta = './data/building_metadata/building_metadata.csv'
     dir_energyData = './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     # pairListTest = [i for i in pairListTest if i[0] == 'SingleFamily-2004']
 
     # Option 4: split train and test set for each of the prototype
-    pairListTrain, pairListTest = tr.splitBuildingWeatherPair_byProto(dir_buildingMeta, 0.95)
+    pairListTrain, pairListTest = tr.splitBuildingWeatherPair_byProto(dir_buildingMeta, testDataPer)
 
     with open(dirName + '/pairListTrain.json', 'w') as f:
         json.dump(pairListTrain, f)
@@ -139,19 +139,6 @@ if __name__ == '__main__':
                                                     randomSeed = randomSeed,
                                                     dayOfWeekJan1 = dayOfWeekJan1,
                                                     )
-
-    if modelName == 'biLSTM_partialGlobal':
-        prediction_tract = train_tract_biRNN_partialGlobal(pp.getAllPrototype(dir_energyData),
-                                                           pairListTrain, pairListTest,
-                                                           features,
-                                                           target = target_buildingLevel,
-                                                           lag = lag,
-                                                           tuneTrail = tuneTrail,
-                                                           maxEpoch = maxEpoch,
-                                                           metaDataDir = dir_buildingMeta,
-                                                           randomSeed = randomSeed,
-                                                           dayOfWeekJan1 = dayOfWeekJan1,
-                                                           )
 
     if not os.path.exists(dirName + '/buildingLevel'):
         os.makedirs(dirName + '/buildingLevel')

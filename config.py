@@ -36,8 +36,8 @@ features = ['GLW',
     'PSFC', 
     'Q2', 'RH', 'SWDOWN', 'T2', 'WINDD', 
     'WINDS',
-    'Typical-Electricity:Facility [J](Hourly)',]
-target_buildingLevel = 'Electricity:Facility [J](Hourly)'
+    'Typical-Environment:Site Total Surface Heat Emission to Air [J](Hourly)',]
+target_buildingLevel = 'Environment:Site Total Surface Heat Emission to Air [J](Hourly)'
 lag = (
     (np.arange(24) + 1).tolist()
 )
@@ -47,11 +47,13 @@ modelName = 'biLSTM'
 tuneTrail = 1
 maxEpoch = 500
 
+testDataPer = 0.85
+
 # scaling up info
-target_tractLevel = 'energy.elec'
+target_tractLevel = 'emission.surf'
 
 # results saving for further eval
-saveFolderHead = 'energyElec_biLSTM_10PerData'
+saveFolderHead = 'emissionSurf_biLSTM_15PerData_V100'
 
 # random seed
 randomSeed = 1
@@ -65,3 +67,5 @@ randomSeed = 1
 #     ]
 dirTargetYear = None
 dayOfWeekJan1 = 1
+
+

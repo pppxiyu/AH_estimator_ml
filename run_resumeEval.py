@@ -1,5 +1,6 @@
 import utils.tract as tr
 import utils.eval as ev
+import utils.vis as vis
 import pandas as pd
 import json
 import os
@@ -58,24 +59,75 @@ if __name__ == '__main__':
 
     if mode == 'singleExp_afterAnalysis':
         ######## eval for each experiment
-        experimentLabel = 'energyElec_2023-08-14-23-39-42'
-        # predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
-        predPrototypeLevel = tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experimentLabel + '/buildingLevel')
 
-        # output the metrics for each prototype
-        tr.metricPrototype(tr.metricPrototypeWeather(predPrototypeLevel,ev.cv_mean_absolute_error_wAbs),
-                        'CVMAE_wAbs').to_csv('./saved/estimates_tracts/'+ experimentLabel + '/prototypeLevel' + 'CVMAE_wAbs' + '.csv',
-                                             index = False)
-        tr.plotPrototypeLevelMetrics_plotly(predPrototypeLevel,
-                                            './saved/estimates_tracts/' + experimentLabel,
-                                            ev.cv_mean_absolute_error_wAbs,
-                                            'CVMAE_wAbs')
+        # # output the metrics for each prototype
+        # experimentLabel = 'energyElec_biLSTM_10PerData_2023-08-15-16-09-06'
+        # predPrototypeLevel = tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experimentLabel + '/buildingLevel')
+
+        # # get metrics ar prototype
+        # tr.metricPrototype(tr.metricPrototypeWeather(predPrototypeLevel,ev.cv_mean_absolute_error_wAbs),
+        #                 'CVMAE_wAbs').to_csv('./saved/estimates_tracts/'+ experimentLabel + '/prototypeLevel' + 'CVMAE_wAbs' + '.csv',
+        #                                      index = False)
+        # vis.plotPrototypeLevelMetrics_plotly(predPrototypeLevel,
+        #                                     './saved/estimates_tracts/' + experimentLabel,
+        #                                     ev.cv_mean_absolute_error_wAbs,
+        #                                     'CVMAE_wAbs')
+
+        # # draw line chart using ground truth and estimation for a prototype
+        # prototypeSelected = 'SingleFamily-2004____36'
+        # prototypeDfSelected = predPrototypeLevel[prototypeSelected]
+        # prototypeDfSelected['DateTime'] = prototypeDfSelected['DateTime'].apply(lambda x: x.replace('2001', '2018'))
+        # prototypeDfSelected = prototypeDfSelected.iloc[700: 1440]
+        # vis.plotPrototypeLevelLines_plotly(prototypeDfSelected,
+        #                                    './paper/figs/' + 'line_' + prototypeSelected + '.html',
+        #                                    prototypeSelected.split('_')[0] + '  ' + prototypeSelected.split('_')[-1]
+        #                                    )
+
+        # # draw line chart using ground truth and estimation for a microclimate zone
+        # # get tract number
+        # experimentLabel = 'energyElec_biLSTM_10PerData_2023-08-15-16-09-06'
+        # selectedClimate = [65, 35, 109, 50]
+        # vis.getTractIndexinWeatherZone(experimentLabel, selectedClimate, './data/building_metadata/building_metadata.csv')
+        # # line charts
+        # predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
+        # vis.plotTractLevelPredictionLine(predTractLevel, 6037600303, './paper/figs/line_tract6037600303.html', [3972,4331])
+
+        # # draw census tract level cvmae with std shadow
+        # experimentLabel = 'energyElec_biLSTM_10PerData_2023-08-15-16-09-06'
+        # predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
+        # vis.plotTractLevelCVMAELine_wShadow(predTractLevel,
+        #                                     # [4332, 5000], # July
+        #                                     # [6540, 7283], # Oct
+        #                                     # [8004, 8735], # Dec
+        #                                     [2148, 2867], # April
+        #                                     # [0, 8735], # all year
+        #                                     './paper/figs/line_allTractCVMAEWithShadow_Apr.html')
+
+        # # draw census tract level true value with std shadow
+        # experimentLabel = 'energyElec_biLSTM_10PerData_2023-08-15-16-09-06'
+        # predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
+        # vis.plotTractLevelTargetEstimate_wShadow(predTractLevel,
+        #                                  'true',
+        #                                  # [4332, 5000], # July
+        #                                  # [6540, 7283], # Oct
+        #                                  # [8004, 8735], # Dec
+        #                                  # [2148, 2867], # April
+        #                                  [0, 8735], # all year
+        #                                  './paper/figs/line_allTractTargetWithShadow.html')
+
+        # # print peak CVMAE and plot
+        # experimentLabel = 'energyElec_biLSTM_10PerData_2023-08-15-16-09-06'
+        # predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
+        # vis.plotPeaks_plotly(predTractLevel[predTractLevel.geoid == 6037101122], 'true', './paper/figs/peakValley_6037101122.html')
+        # vis.plotDistPeakCVMAE(predTractLevel, './paper/figs/dist_peakCVMAE.html')
 
         # # output the metrics at tract level
+        # predTractLevel = pd.read_csv('./saved/estimates_tracts/' + experimentLabel + '/tractsDF.csv')
         # tr.getTractLevelMetrics(predTractLevel, './saved/estimates_tracts/' + experimentLabel)
-        # tr.plotTractLevelPredictionLine(predTractLevel,
+        # vis.plotTractLevelPredictionLine(predTractLevel,
         #                              predTractLevel.geoid.sample(1).iloc[0],
         #                              './saved/estimates_tracts/' + experimentLabel)
+        pass
 
     if mode == 'crossExp':
         ######### eval across experiments
@@ -89,7 +141,7 @@ if __name__ == '__main__':
         for experiment in experimentLabels:
             prototypeLevelMetrics.append(
                 tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experiment + '/buildingLevel'))
-        tr.plotPrototypeLevelMetrics_plotly(prototypeLevelMetrics,
+        vis.plotPrototypeLevelMetrics_plotly(prototypeLevelMetrics,
                                             [
                                                 'nMAE_ELEC',
                                                 # 'nMAE_ELEC'
@@ -103,6 +155,7 @@ if __name__ == '__main__':
                                             )
 
     if mode == 'others':
+
         ######## other test
         experimentLabel = 'energyElec_biLSTM_2023-07-20-20-04-01'
         predPrototypeLevel = tr.reloadPrototypeLevelPred('./saved/estimates_tracts/' + experimentLabel + '/buildingLevel')

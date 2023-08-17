@@ -81,6 +81,7 @@ def splitBuildingWeatherPair_byProto(addr, testPortion = 0.9):
     testPairs_out = [tuple(x) for x in testPairs.to_numpy()]
     return trainPairs_out, testPairs_out
 
+
 ## normalize to per m2 #########################
 def getBuildingArea_prototype(addr, verbose = 0):
     # USE: get the building area of building prototype
@@ -226,8 +227,7 @@ def predict_tracts(predictionDict_norm, buildingMeta_tract):
     return estimate_tract_df_all
 
 
-
-## get ground truth
+######################################### get ground truth
 def loadTractData(addr, colName):
     # USE: load the true tract-level data
     tractData = pd.read_csv(addr, usecols = ['geoid', 'timestamp', colName])
@@ -246,7 +246,7 @@ def filterTractData(tractData, estimateTractData):
     return tractDataFiltered
 
 
-# eval
+########################################## eval
 def combineEstimateTrue(true, estimate, target):
     # make the datetime index consistent
     true = true[(true.timestamp >= estimate['DateTime'].iloc[0]) & ((true.timestamp <= estimate['DateTime'].iloc[-1]))]
@@ -366,52 +366,6 @@ def plotPrototypeLevelMetrics(predPrototypeLevel, addr, metricFunc, metricName):
 
     return 
 
-def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, metricFunc, addr):
-    # USE: draw the metrics plot at prototype level
-    #      using plotly
-    # INPUT: predPrototypeLevel, metricName, colorList: list
-    #        metricFunc: function object
-    #        addr: string
-    # OUTPUT: save plot to the folder
-
-    fig = go.Figure()
-    for pred, name, color in zip(predPrototypeLevel, metricName, colorList):
-        metric_prototype_ave_dict = metricPrototype(metricPrototypeWeather(pred, metricFunc), name)
-
-        prototypes = metric_prototype_ave_dict['prototype'].tolist()
-
-        fig.add_trace(go.Bar(x = metric_prototype_ave_dict[name].tolist(),
-                             y = prototypes,
-                             name = name.split('_')[1],
-                             marker_color = color,
-                             orientation = 'h',
-                             ))
-    fig.update_layout(
-        yaxis = dict(
-            title = 'Prototype',
-            titlefont_size = 14,
-            tickfont_size = 11,
-        ),
-        xaxis = dict(
-            title = metricName[0].split('_')[0],
-            titlefont_size = 14,
-            tickfont_size = 12,
-        ),
-        legend=dict(
-            x = 0.7,
-            y = 0,
-            bgcolor = 'rgba(255, 255, 255, 0)',
-            bordercolor = 'rgba(255, 255, 255, 0)'
-        ),
-        barmode = 'group',
-        bargap = 0.1,  # gap between bars of adjacent location coordinates.
-        bargroupgap = 0.05  # gap between bars of the same location coordinate.
-    )
-    fig.write_html(addr + '/' + metricName[0].split('_')[0] + '_prototype.html')
-
-    print('Prototype level metric fig saved.')
-
-    return
 
 def plotTractLevelMetrics(predTractLevel, addr, metricFunc, metricName):
     # USE: draw the metrics plot at tract level
@@ -425,23 +379,3 @@ def plotTractLevelMetrics(predTractLevel, addr, metricFunc, metricName):
 
     return
 
-def plotTractLevelPredictionLine(df, tractSelect, addr):
-    # USE: draw the prediction line graph for one census tract
-    # INPUT: the tract level df, containing both true and estimate
-    #        census tract name
-    #        the dir of the experiment folder
-    # OUTPUT: save plot to the folder
-
-    dfSelect = df[df.geoid == tractSelect]
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x = dfSelect.timestamp,
-                             y = dfSelect.true,
-                             name = "true",
-                             line_shape = 'linear'))
-    fig.add_trace(go.Scatter(x = dfSelect.timestamp,
-                             y = dfSelect.estimate,
-                             name = "estimate",
-                             line_shape = 'linear'))
-    fig.write_html(addr + '/' + 'tractEstimation_' + str(tractSelect) + '.html')
-
-    return
