@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
 
-    mode = 'singleExp_afterAnalysis'
+    mode = 'crossExp'
 
     if mode == 'singleExp_resumeAnalysis':
         # 1.1 norm the prediction
@@ -134,8 +134,10 @@ if __name__ == '__main__':
 
         # prototype level metrics of several targets
         experimentLabels = [
-            'energyElec_biLSTM_2023-08-14-03-11-39',
-            # 'energyElec_biLSTM_2023-07-20-20-04-01',
+            'energyElec_biLSTM_10PerData_2023-08-15-16-09-06',
+            'emissionSurf_biLSTM_10PerData_V100_2023-08-17-16-49-19',
+            'emissionExhaust_biLSTM_10PerData_2023-08-16-15-09-31',
+            'emissionRej_biLSTM_10PerData_2023-08-16-17-41-46',
         ]
         prototypeLevelMetrics = []
         for experiment in experimentLabels:
@@ -144,13 +146,18 @@ if __name__ == '__main__':
         vis.plotPrototypeLevelMetrics_plotly(prototypeLevelMetrics,
                                             [
                                                 'nMAE_ELEC',
-                                                # 'nMAE_ELEC'
+                                                'nMAE_E-SURF',
+                                                'nMAE_E-EXH',
+                                                'nMAE_E-REJ',
                                             ],
                                             [
-                                                'rgb(55, 83, 109)',
-                                                # 'rgb(26, 118, 255)',
+                                                'rgb(8,69,148)',
+                                                'rgb(66,146,198)',
+                                                 'rgb(33,113,181)',
+                                                 'rgb(107,174,214)',
                                             ],
                                             ev.cv_mean_absolute_error_wAbs,
+                                             pd.read_csv('./data/building_metadata/building_metadata.csv'),
                                             './paper/figs',
                                             )
 

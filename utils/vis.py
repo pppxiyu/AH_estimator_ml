@@ -13,6 +13,7 @@ from scipy.linalg import lstsq
 from scipy.stats import pearsonr
 import pandas as pd
 from utils.eval import cv_mean_absolute_error_wAbs
+import utils.tract as tr
 
 
 ######################## vis: raw data ############
@@ -165,7 +166,7 @@ def partial_xcorr(x, y, max_lag = 10, standardize = True, reverse = False):
 
 
 ######################## vis: result data ############
-def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, metricFunc, addr):
+def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, metricFunc, buildingMeta, addr):
     # USE: draw the metrics plot at prototype level
     #      using plotly
     # INPUT: predPrototypeLevel, metricName, colorList: list
@@ -175,12 +176,21 @@ def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, 
 
     fig = go.Figure()
     for pred, name, color in zip(predPrototypeLevel, metricName, colorList):
-        metric_prototype_ave_dict = metricPrototype(metricPrototypeWeather(pred, metricFunc), name)
+        metric_prototype_ave = tr.metricPrototype(tr.metricPrototypeWeather(pred, metricFunc), name)
 
-        prototypes = metric_prototype_ave_dict['prototype'].tolist()
-
-        fig.add_trace(go.Bar(x = metric_prototype_ave_dict[name].tolist(),
-                             y = prototypes,
+        # further combine
+        buildingAreaPrototype = buildingMeta.groupby('idf.kw').sum()['building.area.m2'].reset_index()
+        metric_prototype_ave_merge = metric_prototype_ave.merge(buildingAreaPrototype, how = 'left', left_on = 'prototype', right_on = 'idf.kw')
+        metric_prototype_ave_merge['shortName'] = metric_prototype_ave_merge['idf.kw'].str.split('-').apply(lambda x: x[0])
+        buildingAreaShortPrototype = metric_prototype_ave_merge.groupby('shortName').sum()['building.area.m2'].reset_index()
+        metric_prototype_ave_merge = metric_prototype_ave_merge.merge(buildingAreaShortPrototype, how = 'left', on = 'shortName')
+        metric_prototype_ave_merge['weight'] = metric_prototype_ave_merge['building.area.m2_x'] / metric_prototype_ave_merge['building.area.m2_y']
+        metric_prototype_ave_merge['weighted_' + name] = metric_prototype_ave_merge[name] * metric_prototype_ave_merge['weight']
+        CVMAE_shortPrototype = metric_prototype_ave_merge.groupby('shortName').sum().reset_index()
+        CVMAE_shortPrototype = CVMAE_shortPrototype.sort_values(by = 'weighted_' + name, ascending = True)
+        # draw
+        fig.add_trace(go.Bar(x = CVMAE_shortPrototype['weighted_' + name].tolist(),
+                             y = CVMAE_shortPrototype['shortName'].tolist(),
                              name = name.split('_')[1],
                              marker_color = color,
                              orientation = 'h',
@@ -197,16 +207,17 @@ def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, 
             tickfont_size = 12,
         ),
         legend=dict(
-            x = 0.7,
+            x = 1,
             y = 0,
             bgcolor = 'rgba(255, 255, 255, 0)',
-            bordercolor = 'rgba(255, 255, 255, 0)'
+            bordercolor = 'rgba(255, 255, 255, 0)',
+
         ),
         barmode = 'group',
         bargap = 0.1,  # gap between bars of adjacent location coordinates.
         bargroupgap = 0.05  # gap between bars of the same location coordinate.
     )
-    fig.write_html(addr + '/' + metricName[0].split('_')[0] + '_prototype.html')
+    fig.write_html(addr + '/bar_' + metricName[0].split('_')[0] + '_prototype.html')
 
     print('Prototype level metric fig saved.')
 

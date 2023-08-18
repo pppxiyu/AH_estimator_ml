@@ -16,7 +16,7 @@ NaturalGas:Facility [J](Hourly)                                     energy.gas
 
 lag length must be a even number if biRNN is used.
 
-modelName: 'naive', 'LSTM', 'biRNN', 'linear', 'mlp'
+modelName: 'naive', 'LSTM', 'biLSTM', 'linear', 'mlp'
 
 dirTargetYear: a list of four elements. First element is the dir of energy data. Second is for weather data. Third is
     for typical target values. The last one is the tract level ground truth.
@@ -43,17 +43,17 @@ lag = (
 )
 
 # model info
-modelName = 'biLSTM'
+modelName = 'mlp'
 tuneTrail = 1
 maxEpoch = 500
 
-testDataPer = 0.85
+testDataPer = 0.9
 
 # scaling up info
 target_tractLevel = 'emission.surf'
 
 # results saving for further eval
-saveFolderHead = 'emissionSurf_biLSTM_15PerData_V100'
+saveFolderHead = 'emissionSurf_mlp_10PerData'
 
 # random seed
 randomSeed = 1
