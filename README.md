@@ -21,6 +21,11 @@ for the explanation of the datasets.
 
 Create a dir `./saved/estimates_tracts` in the root dir of the project.
 
+Running `run_geoVis.py` requires the mapping service of [MapBox](https://www.mapbox.com/).
+Please create `mapbox_token.txt` in `./utils`, which contains the mapbox token in one line.
+Mapbox account is required to obtain the token. An example of 
+mapbox token is `pk.eyJ1IjoicH***********1NXo0M3A5bj*****.f384XN*****`.
+
 ### Configuration
 Edit the `config.py` to configure the training and estimation.
 
@@ -166,3 +171,5 @@ on the raw data.
 
 `run_resumeEval.py` are kept for debugging and customization purposes. It reloads the saved estimations
 for evaluations. 
+
+`run_geoVis.py` is used for drawing maps or other spatial analysis.
