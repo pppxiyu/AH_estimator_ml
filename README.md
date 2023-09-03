@@ -1,48 +1,27 @@
 # Surrogate Modeling for UBEM
 
+
 ## Abstract
 Even with a limited number of building prototypes, urban building energy modeling (UBEM)
 has to consider the microclimates in the region, as the urban heat island effect and the 
 heterogeneous geographical characteristics have an obvious impact on building energy
 performances. The number of simulations needed for UBEM is therefore large, and the 
 computation time could be days long. Surrogate modeling is a promising way to reduce
-the computation time. This repo contains the codes for building surrogate models based
-on the simulation results of a year and estimating the UBEM of other years with different
-microclimates.
+the computation time. This repo contains the codes for training surrogate models based
+on the annual simulation results in selected microclimates and using the models for UBEM 
+with other microclimates.
 
-## I/O
-### Inputs
+
+## Inputs
+### Data
 Download the dataset from [Google Drive](https://drive.google.com/drive/folders/1RWX9ef1bM4drVp5AVWS11xkaZFG_q-DO?usp=drive_link) 
 and name it as `data` in the root dir of the project.
 Please refer to the work by [Xu et. al.](https://github.com/IMMM-SFA/xu_etal_2022_sdata)
-for the explaination of the datasets.
+for the explanation of the datasets.
 
 Create a dir `./saved/estimates_tracts` in the root dir of the project.
 
-
-### Outputs
-After configure and run the program, a folder that contains all the outputs for
-this run will be generated under `./saved/estimates_tracts`. The output folder
-is named with `target_model_experimentTime`. For example, `energyElec_biLSTM_2023-07-21-21-39-29`
-is the output folder for estimating electricity with bi-directional LSTM at
-21:39:29 07/21 2023 (available targets and model names are introduced below).
-
-`pairListTest.json` and `pairListTrain.json` contains the `prototype-weather` pairs
-used for test and training.
-
-The `buildingLevel` folder under the `./saved/estimates_tracts/target_model_experimentTime` contains
-the intermediate result. Each `.csv` file contains the hourly estimation of the
-target at the building prototype level.
-
-`tractsDF.csv` is the estimation of the target at the census tract level.
-
-`config.py` shows the configuration of this experiment, and other files in the 
-`./saved/estimates_tracts/target_model_experimentTime` folder are used for 
-the evaluation and visualization of the estimations.
-
-
-
-## Configuration
+### Configuration
 Edit the `config.py` to configure the training and estimation.
 
 `features`: a list of string. Supports inputs including 
@@ -55,8 +34,6 @@ column of the following table.
 `target_buildingLevel`: string. Supports inputs in the `Full Name`
 column of the following table.
 
-
-
 | Short Name | Full Name                                                         |
 |------------|-------------------------------------------------------------------|
 | emission.surf  | Environment:Site Total Surface Heat Emission to Air \[J](Hourly)  |
@@ -67,15 +44,6 @@ column of the following table.
 | energy.elec | Electricity:Facility \[J](Hourly)                                 |
 | energy.gas | NaturalGas:Facility \[J](Hourly)                                  |
 
-
-`modelName`: string. Supports `'naive'`, `'LSTM'`, `'biRNN'`, `'linear'`, 
-`'mlp'`, and `biRNN_global`.
-
-`tuneTrail`: int. Number of trails in hyper-parameter tuning. Only works
-for `'LSTM'` and `'biLSTM'`.
-
-`maxEpoch`: int. Max epoch count for `'LSTM'` and `'biLSTM'` training.
-
 `lag`: list of int. The index of time lags in each sequence, ranging from 1. 
 For example, in the case of using 4 time lags to estimate 1 timestamp forward with `'LSTM'`, 
 `lag` should be `[1, 2, 3, 4]`. In the case of using 2 timestamps both in the past
@@ -83,16 +51,27 @@ and future to estimate the timestamp in the middle with `'biLSTM'`, also use
 `[1, 2, 3, 4]`. Please note if `'biLSTM'` is used, the length of `lag` must be 
 an even number.
 
+`modelName`: string. Supports `'naive'`, `'LSTM'`, `'biRNN'`, `'linear'`, 
+`'mlp'`, and `biRNN_global`.
+
+`tuneTrail`: int. Number of trails in hyperparameter tuning. Only works
+for `'LSTM'` and `'biLSTM'`. If set as 1, hyperparameter tuning is disabled.
+
+`maxEpoch`: int. Max epoch count for `'LSTM'` and `'biLSTM'` training.
+
 `saveFolderHead`: string. Recommend name it using the `target_tractLevel`
 and the `modelName`. For example, `energyElec_biLSTM` stands for the experiment
 using `'biLSTM'` for estimating `'energy.elec'`.
 
 `randomSeed`: int. The random seed used by numpy.random.
 
-`dirTargetYear`: `None` or list. In default, `dirTargetYear` is set as `None`. In 
-this case, the microclimates zones in the 2018 is split into training and testing 
-set. However, in real use case, 2018 microclimate zones are used for training. The trained
-model will estimate the targets in another year. `dirTargetYear` should be set as a 
+`testDataPer`: float, 0-1, only works for the "Option 2" in the `run.py`. 
+The percentage of microclimates used for training. 
+
+`dirTargetYear`: `None` or list, only works for the "Option 1" in the `run.py`.
+In default, `dirTargetYear` is set as `None`. In this case, the microclimates zones 
+in the 2018 is split into training and testing set. However, in real use case, the trained
+model will estimate the targets in another year. For this purpose, `dirTargetYear` should be set as a 
 list, indicating the dir of input features and ground truth (if any) for test.
 The first element is the dir of energy data. The second is for weather data. The third is 
 for typical target values. The last one is the tract level ground truth. Example for estimating 2016 whole year:
@@ -108,29 +87,49 @@ for typical target values. The last one is the tract level ground truth. Example
 `dayOfWeekJan1`: int. The day of week of the target year of estimation. 1 incicates Monday and 7 indicates
 Sunday. 
 
-## Global estimation option
 
-Global estimation means using one single model to do the estimation for all prototypes. It is expected to 
-generate better accuracy in some cases, because different prototypes share part of the data generation process,
-and it works as a simple multitasks learning architecture. However, it should be noted that the number of
-samples for the model will increase dramatically, as the samples for each separate model of each prototype
-has been stacked togather. The total size of training and validation `numpy` array with `float32` type
-is about 25GB. It is doable to send data to GPU in batches, which is left for further development.
+## Outputs
+After configure and run the program, a folder that contains all the outputs for
+this run will be generated under `./saved/estimates_tracts`. The output folder
+is named with `target_model_notes_experimentTime`. 
+For example, `energyElec_biLSTM_GPU-V100_2023-07-21-21-39-29`
+is the output folder for estimating electricity with bi-directional LSTM at
+21:39:29 07/21 2023 with V100 GPU for training (available targets and model names are introduced below).
+
+`pairListTest.json` and `pairListTrain.json` contains the `prototype-weather` pairs
+used for test and training.
+
+The `buildingLevel` folder under the `./saved/estimates_tracts/target_model_experimentTime` contains
+the intermediate result. Each `.csv` file contains the hourly estimation of the
+target at the building prototype level.
+
+`tractsDF.csv` is the estimation of the target at the census tract level.
+
+`config.py` shows the configuration of this experiment, and other files in the 
+`./saved/estimates_tracts/target_model_experimentTime` folder are used for 
+the evaluation and visualization of the estimations.
 
 
+## Requirements
+Required packages:
+* tensorflow
+* keras-tuner
+* numpy
+* pandas
+* geopandas
+* statesmodel
+* scipy
+* scikit-learn
+* matplotlib
+* plotly
 
-## Installation and running
-
-Install project environment:
-```
-pip install -r requirements.txt
-```
-Training and estimation:
+Running:
 ```
 python run.py
 ```
+
 The repo is tested on a NVIDIA V100 GPU, the running using the default config in this
-repo can be finished within approximatelt 5.5 hours.
+repo can be finished within approximately 1.5 hours.
 
 
 ## Notes
@@ -153,16 +152,17 @@ For example:
     pairListTrain = pairListTrain[0:1]
     pairListTest = pairListTest[0:1]
     ```
+  
+* Global estimation means using one single model to do the estimation for all prototypes. It is expected to 
+generate better accuracy in some cases, because different prototypes share part of the data generation process,
+and it works as a simple multitasks learning architecture. Set `modelName = 'biLSTM_global'` will open 
+this option. However, the option was not fully developed and the size of training dataset is large.
+The total size of training and validation `numpy` array with `float32` type is about 25GB. 
 
-
-
-
+  
 ## Auxiliary files
 `run_preAnalysis.py` conducts preliminary analysis (e.g., visualization, autocorelation plot) 
 on the raw data.
-
-`run_prototypeLevel.py` runs the model for the selected prototype. Keep it for
-debugging purposes.
 
 `run_resumeEval.py` are kept for debugging and customization purposes. It reloads the saved estimations
 for evaluations. 

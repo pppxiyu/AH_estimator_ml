@@ -16,7 +16,7 @@ NaturalGas:Facility [J](Hourly)                                     energy.gas
 
 lag length must be a even number if biRNN is used.
 
-modelName: 'naive', 'LSTM', 'biLSTM', 'linear', 'mlp'
+modelName: 'naive', 'linear', 'mlp', 'LSTM', 'biLSTM', 'biLSTM_global'
 
 dirTargetYear: a list of four elements. First element is the dir of energy data. Second is for weather data. Third is
     for typical target values. The last one is the tract level ground truth.
@@ -36,24 +36,24 @@ features = ['GLW',
     'PSFC', 
     'Q2', 'RH', 'SWDOWN', 'T2', 'WINDD', 
     'WINDS',
-    'Typical-SimHVAC:HVAC System Total Heat Rejection Energy [J](Hourly)',]
-target_buildingLevel = 'SimHVAC:HVAC System Total Heat Rejection Energy [J](Hourly)'
+    'Typical-Electricity:Facility [J](Hourly)',]
+target_buildingLevel = 'Electricity:Facility [J](Hourly)'
 lag = (
     (np.arange(24) + 1).tolist()
 )
 
 # model info
-modelName = 'mlp'
+modelName = 'biLSTM'
 tuneTrail = 1
 maxEpoch = 500
 
 testDataPer = 0.9
 
 # scaling up info
-target_tractLevel = 'emission.rej'
+target_tractLevel = 'energy.elec'
 
 # results saving for further eval
-saveFolderHead = 'emissionRej_mlp_10PerData'
+saveFolderHead = 'energyElec_biLSTM_10PerData'
 
 # random seed
 randomSeed = 1

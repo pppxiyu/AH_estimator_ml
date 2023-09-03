@@ -63,20 +63,18 @@ if __name__ == '__main__':
     # 1.0 set training and testing set
     # Option 1: split data using microclimates
     # pairListTrain, pairListTest = tr.splitBuildingWeatherPair_byWeather(dir_buildingMeta, 0.85)
+    # if dirTargetYear != None:
+    #     pairListTrain = pairListTrain + pairListTest
+    #     pairListTest = pairListTrain
 
-    # Option 2: make train and test set same but in different year
-    if dirTargetYear != None:
-        pairListTrain = pairListTrain + pairListTest
-        pairListTest = pairListTrain
+    # Option 2: split data using microclimates for each prototype
+    pairListTrain, pairListTest = tr.splitBuildingWeatherPair_byProto(dir_buildingMeta, testDataPer)
 
     # Option 3: only for debugging, it can limit the train and test to selected prototype-weather pairs
     # pairListTrain = pairListTrain[0:1]
     # pairListTest = pairListTest[0:1]
     # pairListTrain = [i for i in pairListTrain if i[0] == 'SingleFamily-2004']
     # pairListTest = [i for i in pairListTest if i[0] == 'SingleFamily-2004']
-
-    # Option 4: split train and test set for each of the prototype
-    pairListTrain, pairListTest = tr.splitBuildingWeatherPair_byProto(dir_buildingMeta, testDataPer)
 
     with open(dirName + '/pairListTrain.json', 'w') as f:
         json.dump(pairListTrain, f)
