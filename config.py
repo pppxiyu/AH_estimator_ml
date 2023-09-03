@@ -36,8 +36,8 @@ features = ['GLW',
     'PSFC', 
     'Q2', 'RH', 'SWDOWN', 'T2', 'WINDD', 
     'WINDS',
-    'Typical-Environment:Site Total Surface Heat Emission to Air [J](Hourly)',]
-target_buildingLevel = 'Environment:Site Total Surface Heat Emission to Air [J](Hourly)'
+    'Typical-SimHVAC:HVAC System Total Heat Rejection Energy [J](Hourly)',]
+target_buildingLevel = 'SimHVAC:HVAC System Total Heat Rejection Energy [J](Hourly)'
 lag = (
     (np.arange(24) + 1).tolist()
 )
@@ -50,10 +50,10 @@ maxEpoch = 500
 testDataPer = 0.9
 
 # scaling up info
-target_tractLevel = 'emission.surf'
+target_tractLevel = 'emission.rej'
 
 # results saving for further eval
-saveFolderHead = 'emissionSurf_mlp_10PerData'
+saveFolderHead = 'emissionRej_mlp_10PerData'
 
 # random seed
 randomSeed = 1
