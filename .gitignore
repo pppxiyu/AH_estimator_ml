@@ -1,5 +1,4 @@
 slurm.sbatch
-.gitignore.gitignore
 data/
 .idea/
 .ipynb_checkpoints/
