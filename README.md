@@ -117,7 +117,7 @@ the evaluation and visualization of the estimations.
 
 ## Requirements
 Required packages:
-* tensorflow
+* tensorflow 2
 * keras-tuner
 * numpy
 * pandas
