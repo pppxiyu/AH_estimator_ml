@@ -33,17 +33,18 @@ mode = 'single proto-weather pair'
 if mode == 'single proto-weather pair':
     # Single building-weather pair for preliminary analysis
     # to import one prototype-weather pair
-    dataFull = pd.concat([importRawData('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv/MultiFamily-pre-1980____51.csv',
-                                        'Electricity:Facility [J](Hourly)',
-                                        ),
-                          importWeatherData('./data/weather input/2018', '51'),
-                          importTypical('./data/testrun', 'MultiFamily-pre-1980',
-                                        'Electricity:Facility [J](Hourly)', 1)
-                         ],
-                         axis = 1)
+    dataFull = pd.concat([importRawData(
+        './data/hourly_heat_energy/sim_result_ann_WRF_2018_csv/SingleFamily-2004____36.csv',
+        'Electricity:Facility [J](Hourly)',
+    ),
+        importWeatherData('./data/weather input/2018', '36'),
+        importTypical('./data/testrun', 'SingleFamily-2004',
+                      'Electricity:Facility [J](Hourly)', 1)
+    ],
+        axis=1)
     dataFull.insert(0, 'Climate', dataFull.pop('Climate'))
-    dataFull['Electricity:Facility [J](Hourly)'].plot()
-    plt.show()
+    # dataFull['Electricity:Facility [J](Hourly)'].plot()
+    # plt.show()
 
     # # pac
     # plt.figure()
@@ -61,20 +62,31 @@ if mode == 'single proto-weather pair':
     # plotPACF(pacf(dataFull['SimHVAC:HVAC System Total Heat Rejection Energy [J](Hourly)'].values, nlags = 400, alpha = 0.05), save = './figs/partial_correlation_heatRejection.html')
 
     # partial cross correlation
-    plotPCC(dataFull,
-            ['GLW', 'PSFC', 'Q2', 'RH', 'SWDOWN', 'T2', 'WINDD', 'WINDS'],
-            'Electricity:Facility [J](Hourly)',
-            192,
-            save = './paper/figs/partial_cross_correlation_MultiFamility-pre-1980_51_energyElec.html',
-            # reverse = True,
-            # xaxisTitle = 'Advances',
-            )
+    # plotPCC(dataFull,
+    #         ['GLW', 'PSFC', 'Q2', 'RH', 'SWDOWN', 'T2', 'WINDD', 'WINDS',
+    #          'Typical-Electricity:Facility [J](Hourly)',
+    #          ],
+    #         'Electricity:Facility [J](Hourly)',
+    #         192,
+    #         save = './figs/partial_cross_correlation_HeavyManufacturing-90_1-2004-ASHRAE 169-2013-3B_36_energyElec.html',
+    #         # reverse = True,
+    #         # xaxisTitle = 'Advances',
+    #         )
+
+    # line chart of ground truth and typical values
+    prototypeSelected = 'SingleFamily-2004____36'
+    dataFull['DateTime'] = dataFull['Date/Time'].apply(lambda x: str(x).replace('2001', '2018'))
+    dataFull = dataFull.iloc[700: 1440]
+    plotPrototypeLevelLines_typical(dataFull,
+                                    './paper/figs/' + 'line_typical_' + prototypeSelected + '.html',
+                                    'Electricity:Facility [J](Hourly)',
+                                    prototypeSelected.split('_')[0] + '  ' + prototypeSelected.split('_')[-1]
+                                    )
 
     # # peaks
     # plotPeaks(dataFull[(dataFull['Date/Time'] < '2001-07-31 23:59:59') & (dataFull['Date/Time'] > '2001-07-14 00:00:00')],
     #           target = 'Electricity:Facility [J](Hourly)',
     #          )
-
 
 # Weather feature analysis
 # weatherDf2018 = getAllClimatesData(getAllClimates('./data/hourly_heat_energy/sim_result_ann_WRF_2018_csv'),
@@ -91,7 +103,6 @@ if mode == 'single proto-weather pair':
 #
 # weatherDf = pd.concat([weatherDf2018, weatherDf2016], axis = 1)
 # weatherDf = weatherDf.sort_index(axis = 1)
-
 
 
 print()

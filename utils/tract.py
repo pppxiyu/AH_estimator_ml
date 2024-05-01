@@ -9,7 +9,7 @@ import re
 
 from utils.eval import *
 import matplotlib.pyplot as plt
-import pandas as pd 
+import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 from scipy.signal import find_peaks
 import json
@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 
 
 ## sampling ####################
-def splitBuildingWeatherPair_byWeather(addr, testPortion = 0.15):
+def splitBuildingWeatherPair_byWeather(addr, testPortion=0.15):
     # USE: randomly select some weather zones for test
     #      make sure the training pairs have all building types
     #      return pairs for training and test
@@ -53,7 +53,8 @@ def splitBuildingWeatherPair_byWeather(addr, testPortion = 0.15):
 
     return pairList_train, pairList_test
 
-def splitBuildingWeatherPair_byProto(addr, testPortion = 0.9):
+
+def splitBuildingWeatherPair_byProto(addr, testPortion=0.9):
     # USE: randomly select some weather zones for test
     #      make sure the training pairs have all building types
     #      return pairs for training and test
@@ -71,7 +72,8 @@ def splitBuildingWeatherPair_byProto(addr, testPortion = 0.9):
     buildingMeta_proto.loc[buildingMeta_proto['selectCount'] <= 1, 'selectCount'] = 2
     # randomly select pairs according to buildingMeta_proto
     selectCount_proto = buildingMeta_proto['selectCount'].to_dict()
-    trainPairs = buildingMeta_pair.groupby('idf.kw').apply(lambda x: x.sample(selectCount_proto[x.name])).reset_index(drop = True)
+    trainPairs = buildingMeta_pair.groupby('idf.kw').apply(lambda x: x.sample(selectCount_proto[x.name])).reset_index(
+        drop=True)
     # take off train pairs for all pairs and get test pairs
     trainPairsList = (trainPairs['idf.kw'] + trainPairs['id.grid.coarse'].astype(str)).tolist()
     buildingMeta_pair['pair'] = buildingMeta_pair['idf.kw'] + buildingMeta_pair['id.grid.coarse'].astype(str)
@@ -83,7 +85,7 @@ def splitBuildingWeatherPair_byProto(addr, testPortion = 0.9):
 
 
 ## normalize to per m2 #########################
-def getBuildingArea_prototype(addr, verbose = 0):
+def getBuildingArea_prototype(addr, verbose=0):
     # USE: get the building area of building prototype
     # INPUT: the address of simulation outputs directory
     # OUTPUT: dict
@@ -114,6 +116,7 @@ def getBuildingArea_prototype(addr, verbose = 0):
                             buildingArea_dict[proto] = float(buildingArea)
     return buildingArea_dict
 
+
 def normalize_perM2(predictionDict, pairList_test, buildingArea_dict):
     # USE: normalize estimations for all prototype-weather pair in test set using building area
     # OUTPUT: df, similar to output of trainPredict_allPairs_LSTM, with two more normalized columns
@@ -141,10 +144,11 @@ def getBuildingArea_tracts_legacy(addr, pairList_test):
 
     buildingMeta = pd.read_csv(addr)
 
-    pairList_test_idgridcoarse = [item[1] for item in pairList_test] # weather
+    pairList_test_idgridcoarse = [item[1] for item in pairList_test]  # weather
 
     buildingMeta_forTest = buildingMeta[buildingMeta['id.grid.coarse'].isin(pairList_test_idgridcoarse)]
-    buildingMeta_forTest_tract = buildingMeta_forTest.groupby(['id.tract', 'idf.kw', 'id.grid.coarse'])['building.area.m2'].sum()
+    buildingMeta_forTest_tract = buildingMeta_forTest.groupby(['id.tract', 'idf.kw', 'id.grid.coarse'])[
+        'building.area.m2'].sum()
     buildingMeta_forTest_tract = buildingMeta_forTest_tract.reset_index()
     return buildingMeta_forTest_tract
 
@@ -157,8 +161,10 @@ def getBuildingArea_tracts(addr, pairList_test):
     buildingMeta = pd.read_csv(addr)
     # select the tracts that can be formed using the pairs in pairList_test
     # get all pairs in the meta
-    buildingMeta_grouped = buildingMeta.groupby(['id.tract', 'idf.kw', 'id.grid.coarse']).sum()[['building.area.m2']].reset_index()
-    buildingMeta_grouped['pair'] = buildingMeta_grouped['idf.kw'] + '_' + buildingMeta_grouped['id.grid.coarse'].astype(str)
+    buildingMeta_grouped = buildingMeta.groupby(['id.tract', 'idf.kw', 'id.grid.coarse']).sum()[
+        ['building.area.m2']].reset_index()
+    buildingMeta_grouped['pair'] = buildingMeta_grouped['idf.kw'] + '_' + buildingMeta_grouped['id.grid.coarse'].astype(
+        str)
     # get all pairs for test
     pairList_test_concat = [item[0] + '_' + str(item[1]) for item in pairList_test]
     # select the pairs in meta
@@ -166,15 +172,16 @@ def getBuildingArea_tracts(addr, pairList_test):
     # get the tracts whose pairs all survive in the selection
     pairsInTracts_after = buildingMeta_grouped_reduced.groupby(['id.tract']).count()[['pair']]
     pairsInTracts_before = buildingMeta_grouped.groupby(['id.tract']).count()[['pair']]
-    pairsInTracts_merge = pairsInTracts_after.merge(pairsInTracts_before, how = 'left',
-                                                    left_on = pairsInTracts_after.index,
-                                                    right_on = pairsInTracts_before.index,
+    pairsInTracts_merge = pairsInTracts_after.merge(pairsInTracts_before, how='left',
+                                                    left_on=pairsInTracts_after.index,
+                                                    right_on=pairsInTracts_before.index,
                                                     suffixes=('_after', '_before'),
                                                     )
     pairsInTracts_final = pairsInTracts_merge[pairsInTracts_merge['pair_after'] == pairsInTracts_merge['pair_before']]
     tract4test = pairsInTracts_final['key_0'].tolist()
     # output selected building meta
-    buildingMeta4test = buildingMeta.groupby(['id.tract', 'idf.kw', 'id.grid.coarse'])['building.area.m2'].sum().reset_index()
+    buildingMeta4test = buildingMeta.groupby(['id.tract', 'idf.kw', 'id.grid.coarse'])[
+        'building.area.m2'].sum().reset_index()
     buildingMeta4test = buildingMeta4test[buildingMeta4test['id.tract'].isin(tract4test)]
     return buildingMeta4test
 
@@ -197,11 +204,12 @@ def getTracts_remove(addr, tractsMeta):
     tractsMeta = tractsMeta[['id.tract', 'id.grid.coarse']]
 
     # get the rows that is in original but not in the current one
-    merged = tractWeatherOriginal.merge(tractsMeta, how = 'left', on = ['id.tract', 'id.grid.coarse'], indicator = True)
+    merged = tractWeatherOriginal.merge(tractsMeta, how='left', on=['id.tract', 'id.grid.coarse'], indicator=True)
     originalOnly = merged[merged._merge == 'left_only']
     tractsWithProblem = originalOnly['id.tract'].unique().tolist()
 
     return tractsWithProblem
+
 
 def predict_tracts(predictionDict_norm, buildingMeta_tract):
     # USE: scale up the normed estimation of building-weather pairs to tracts
@@ -211,9 +219,10 @@ def predict_tracts(predictionDict_norm, buildingMeta_tract):
     estimate_tract_df_list = []
     for tract in buildingMeta_tract['id.tract'].unique().tolist():  # iterate all tracts
 
-        tractDf = buildingMeta_tract[buildingMeta_tract['id.tract'] == tract] # get all building-weather pair in the tract
-        estimateTract = np.zeros(len(list(predictionDict_norm.values())[0])) # initiate estimate
-        for i in range(len(tractDf)): # loop through all the building-weather pairs in this tract
+        tractDf = buildingMeta_tract[
+            buildingMeta_tract['id.tract'] == tract]  # get all building-weather pair in the tract
+        estimateTract = np.zeros(len(list(predictionDict_norm.values())[0]))  # initiate estimate
+        for i in range(len(tractDf)):  # loop through all the building-weather pairs in this tract
             tractDf_row = tractDf.iloc[i]
             pairName = tractDf_row['idf.kw'] + '____' + str(tractDf_row['id.grid.coarse'])
             estimateTract += (predictionDict_norm[pairName]['estimatePerM2'] * tractDf_row['building.area.m2']).values
@@ -223,26 +232,27 @@ def predict_tracts(predictionDict_norm, buildingMeta_tract):
         estimate_tract_df.insert(0, 'geoid', [tract] * len(estimate_tract_df))
         estimate_tract_df_list.append(estimate_tract_df)
     # concat df for all tracts
-    estimate_tract_df_all = pd.concat(estimate_tract_df_list, axis = 0, ignore_index = True)
+    estimate_tract_df_all = pd.concat(estimate_tract_df_list, axis=0, ignore_index=True)
     return estimate_tract_df_all
 
 
 ######################################### get ground truth
 def loadTractData(addr, colName):
     # USE: load the true tract-level data
-    tractData = pd.read_csv(addr, usecols = ['geoid', 'timestamp', colName])
-    tractData['timestamp'] = np.repeat(pd.date_range(start = '2001-01-01 00:00:00',
-                                                     end = '2001-12-31 23:00:00',
-                                                     freq = 'H'),
-                                       len(tractData) / 8760,)
+    tractData = pd.read_csv(addr, usecols=['geoid', 'timestamp', colName])
+    tractData['timestamp'] = np.repeat(pd.date_range(start='2001-01-01 00:00:00',
+                                                     end='2001-12-31 23:00:00',
+                                                     freq='H'),
+                                       len(tractData) / 8760, )
     tractData[colName] = tractData[colName] / 3.6e+6
     return tractData
+
 
 def filterTractData(tractData, estimateTractData):
     # USE: filter the true energy data using the geoid in test set
     geoid4test = list(estimateTractData.geoid.unique())
     tractDataFiltered = tractData[tractData.geoid.isin(geoid4test)]
-    tractDataFiltered = tractDataFiltered.sort_values(by = ['geoid', 'timestamp'])
+    tractDataFiltered = tractDataFiltered.sort_values(by=['geoid', 'timestamp'])
     return tractDataFiltered
 
 
@@ -257,7 +267,9 @@ def combineEstimateTrue(true, estimate, target):
     df['estimate'] = estimate['estimate'].to_list()
     return df
 
+
 def reloadPrototypeLevelPred(folder):
+    print('Reloading from ', folder)
     files = [f for f in os.listdir(folder)]
     dfs = {}
     for filename in files:
@@ -266,31 +278,34 @@ def reloadPrototypeLevelPred(folder):
         dfs[filename_clean] = df
     return dfs
 
+
 def metricPrototypeWeather(prediction_dict, metricFunc):
     # show the error at the building-weather pair level
     metric_dict = {}
     for k in list(prediction_dict.keys()):
-        metric= metricFunc(prediction_dict[k].true, prediction_dict[k].estimate)
+        print(k)
+        metric = metricFunc(prediction_dict[k].true, prediction_dict[k].estimate)
         metric_dict[k] = metric
     return metric_dict
 
+
 def metricPrototype(metric_dict, metricName):
-    df = pd.DataFrame(list(metric_dict.items()), columns = ['pair', metricName])
+    df = pd.DataFrame(list(metric_dict.items()), columns=['pair', metricName])
     df['prototype'] = df.pair.str.split('____').str[0]
     df_group = df[['prototype', metricName]].groupby('prototype').mean()
     df_group = df_group.reset_index()
-    df_group = df_group.sort_values(metricName, ascending = True)
+    df_group = df_group.sort_values(metricName, ascending=True)
     return df_group
 
-def getTractLevelMetrics(predTractLevel, addr, computeTime = None):
 
+def getTractLevelMetrics(predTractLevel, addr, computeTime=None):
     # USE: get the metrics at tract level
     # INPUT: the folder containing running results
     # OUTPUT: save json to the folder
 
     metrics = {}
 
-    metrics['RMSE'] = mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values, squared = False)
+    metrics['RMSE'] = mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values, squared=False)
     metrics['MAE'] = mean_absolute_error(predTractLevel.true.values, predTractLevel.estimate.values)
     metrics['MAPE'] = mean_absolute_percentage_error(predTractLevel.true.values, predTractLevel.estimate.values)
     metrics['CVRMSE'] = cv_root_mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values)
@@ -298,36 +313,39 @@ def getTractLevelMetrics(predTractLevel, addr, computeTime = None):
     metrics['CVRMSE_wAbs'] = cv_root_mean_squared_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values)
     metrics['CVMAE_wAbs'] = cv_mean_absolute_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values)
 
-    peaks_true_index = find_peaks(predTractLevel.true, prominence = 1)[0]
+    peaks_true_index = find_peaks(predTractLevel.true, prominence=1)[0]
     peaks_true_mag = predTractLevel.true.values[peaks_true_index]
     peaks_predict_mag = predTractLevel.estimate.values[peaks_true_index]
-    peaks_predict_index = find_peaks(predTractLevel.estimate, prominence = 1)[0]
-    metrics['PEAK_RMSE'] =  mean_squared_error(peaks_true_mag, peaks_predict_mag, squared = False)
+    peaks_predict_index = find_peaks(predTractLevel.estimate, prominence=1)[0]
+    metrics['PEAK_RMSE'] = mean_squared_error(peaks_true_mag, peaks_predict_mag, squared=False)
     metrics['PEAK_MAE'] = mean_absolute_error(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CVRMSE'] = cv_root_mean_squared_error(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CVMAE'] = cv_mean_absolute_error(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CVRMSE_wAbs'] = cv_root_mean_squared_error_wAbs(peaks_true_mag, peaks_predict_mag)
     metrics['PEAK_CVMAE_wAbs'] = cv_mean_absolute_error_wAbs(peaks_true_mag, peaks_predict_mag)
-    metrics['PEAK_CorrectTiming'] = (np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0])
+    metrics['PEAK_CorrectTiming'] = (
+                np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0])
 
     metrics['exeTIME'] = computeTime
 
-    print('RMSE is:', mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values, squared = False))
+    print('RMSE is:', mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values, squared=False))
     print('MAE is: ', mean_absolute_error(predTractLevel.true.values, predTractLevel.estimate.values))
 
     print('MAPE is: ', mean_absolute_percentage_error(predTractLevel.true.values, predTractLevel.estimate.values))
     print('CVRMSE is: ', cv_root_mean_squared_error(predTractLevel.true.values, predTractLevel.estimate.values))
     print('CVMAE is: ', cv_mean_absolute_error(predTractLevel.true.values, predTractLevel.estimate.values))
-    print('CVRMSE_wAbs is:', cv_root_mean_squared_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values))
+    print('CVRMSE_wAbs is:',
+          cv_root_mean_squared_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values))
     print('CVMAE_wAbs is:', cv_mean_absolute_error_wAbs(predTractLevel.true.values, predTractLevel.estimate.values))
 
-    print('RMSE at peaks is:', mean_squared_error(peaks_true_mag, peaks_predict_mag, squared = False))
+    print('RMSE at peaks is:', mean_squared_error(peaks_true_mag, peaks_predict_mag, squared=False))
     print('MAE at peaks is: ', mean_absolute_error(peaks_true_mag, peaks_predict_mag))
     print('CVRMSE at peak is: ', cv_root_mean_squared_error(peaks_true_mag, peaks_predict_mag))
     print('CVMAE at peaks is: ', cv_mean_absolute_error(peaks_true_mag, peaks_predict_mag))
     print('PEAK_CVRMSE_wAbs at peak is', cv_root_mean_squared_error_wAbs(peaks_true_mag, peaks_predict_mag))
     print('PEAK_CVMAE_wAbs at peak is', cv_mean_absolute_error_wAbs(peaks_true_mag, peaks_predict_mag))
-    print('Percentage of correct peak timing is: ', (np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0]))
+    print('Percentage of correct peak timing is: ',
+          (np.intersect1d(peaks_predict_index, peaks_true_index).shape[0] / peaks_true_index.shape[0]))
 
     print('exeTIME is: ', computeTime)
 
@@ -336,7 +354,8 @@ def getTractLevelMetrics(predTractLevel, addr, computeTime = None):
 
     print('Tract level metrics saved.')
 
-    return 
+    return
+
 
 def getPrototypeLevelMetrics(predPrototypeLevel, addr):
     # USE: get the metrics at prototype level
@@ -344,12 +363,14 @@ def getPrototypeLevelMetrics(predPrototypeLevel, addr):
     # OUTPUT: save json to the folder
 
     metrics = {}
-    metrics['MAPE'] = metricPrototype(metricPrototypeWeather(predPrototypeLevel, mean_absolute_percentage_error), 'MAPE')
+    metrics['MAPE'] = metricPrototype(metricPrototypeWeather(predPrototypeLevel, mean_absolute_percentage_error),
+                                      'MAPE')
 
     with open(addr + '/' + 'prototypeLevelMetrics.json', 'w') as f:
         json.dump(metrics, f)
-    
-    return 
+
+    return
+
 
 def plotPrototypeLevelMetrics(predPrototypeLevel, addr, metricFunc, metricName):
     # USE: draw the metrics plot at prototype level
@@ -364,7 +385,7 @@ def plotPrototypeLevelMetrics(predPrototypeLevel, addr, metricFunc, metricName):
 
     print('Prototype level metric fig saved.')
 
-    return 
+    return
 
 
 def plotTractLevelMetrics(predTractLevel, addr, metricFunc, metricName):
@@ -378,4 +399,3 @@ def plotTractLevelMetrics(predTractLevel, addr, metricFunc, metricName):
     plt.savefig(addr + '/tractLevel' + metricName + '.png')
 
     return
-

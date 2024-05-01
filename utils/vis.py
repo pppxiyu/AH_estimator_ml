@@ -12,7 +12,7 @@ import matplotlib.style as style
 from scipy.linalg import lstsq
 from scipy.stats import pearsonr
 import pandas as pd
-from utils.eval import cv_mean_absolute_error_wAbs
+from utils.eval import cv_mean_absolute_error_wAbs, cv_root_mean_squared_error_wAbs
 import utils.tract as tr
 
 
@@ -164,9 +164,26 @@ def partial_xcorr(x, y, max_lag = 10, standardize = True, reverse = False):
         xcorr[lag] = pearsonr(resid_l, resid_Z.ravel())[0]
     return xcorr
 
+def plotPrototypeLevelLines_typical(protoDf, saveDir, target, title = None):
+    # USE: draw the line chart, one line is grouth truth, another is estimates
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x = protoDf['DateTime'], y = protoDf[target], name = "True",
+                             line_shape='linear'))
+    fig.add_trace(go.Scatter(x = protoDf['DateTime'], y = protoDf['Typical-' + target], name = "Typical",
+                             line_shape='linear'))
+    fig.update_layout(template = 'seaborn',
+                      font_size = 16,
+                      xaxis_title = 'Time (hour)',
+                      yaxis_title = 'Electricity Consumption (kWh)',
+                      title = title
+                      )
+    fig.write_html(saveDir)
+    return
+
 
 ######################## vis: result data ############
-def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, metricFunc, buildingMeta, addr):
+def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, metricFunc, reduced_buildingMeta, addr):
     # USE: draw the metrics plot at prototype level
     #      using plotly
     # INPUT: predPrototypeLevel, metricName, colorList: list
@@ -176,11 +193,11 @@ def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, 
 
     fig = go.Figure()
     for pred, name, color in zip(predPrototypeLevel, metricName, colorList):
+        print('Drawing for ', name)
         metric_prototype_ave = tr.metricPrototype(tr.metricPrototypeWeather(pred, metricFunc), name)
 
         # further combine
-        buildingAreaPrototype = buildingMeta.groupby('idf.kw').sum()['building.area.m2'].reset_index()
-        metric_prototype_ave_merge = metric_prototype_ave.merge(buildingAreaPrototype, how = 'left', left_on = 'prototype', right_on = 'idf.kw')
+        metric_prototype_ave_merge = metric_prototype_ave.merge(reduced_buildingMeta, how ='left', left_on ='prototype', right_on ='idf.kw')
         metric_prototype_ave_merge['shortName'] = metric_prototype_ave_merge['idf.kw'].str.split('-').apply(lambda x: x[0])
         buildingAreaShortPrototype = metric_prototype_ave_merge.groupby('shortName').sum()['building.area.m2'].reset_index()
         metric_prototype_ave_merge = metric_prototype_ave_merge.merge(buildingAreaShortPrototype, how = 'left', on = 'shortName')
@@ -188,6 +205,7 @@ def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, 
         metric_prototype_ave_merge['weighted_' + name] = metric_prototype_ave_merge[name] * metric_prototype_ave_merge['weight']
         CVMAE_shortPrototype = metric_prototype_ave_merge.groupby('shortName').sum().reset_index()
         CVMAE_shortPrototype = CVMAE_shortPrototype.sort_values(by = 'weighted_' + name, ascending = True)
+
         # draw
         fig.add_trace(go.Bar(x = CVMAE_shortPrototype['weighted_' + name].tolist(),
                              y = CVMAE_shortPrototype['shortName'].tolist(),
@@ -205,6 +223,7 @@ def plotPrototypeLevelMetrics_plotly(predPrototypeLevel, metricName, colorList, 
             title = metricName[0].split('_')[0],
             titlefont_size = 14,
             tickfont_size = 12,
+            range=[0, 0.2]
         ),
         legend=dict(
             x = 1,
@@ -229,7 +248,7 @@ def plotPrototypeLevelLines_plotly(protoDf, saveDir, title = None):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x = protoDf['DateTime'], y = protoDf['true'], name = "True",
                              line_shape='linear'))
-    fig.add_trace(go.Scatter(x = protoDf['DateTime'], y = protoDf['estimate'], name = "Estimate",
+    fig.add_trace(go.Scatter(x = protoDf['DateTime'], y = protoDf['estimate'], name = "Estimated",
                              line_shape='linear'))
     fig.update_layout(template = 'seaborn',
                       font_size = 16,
@@ -395,6 +414,7 @@ def plotDistPeakCVMAE(data, addrSave):
     def getCVAME_peaks(true, estimate):
         peaks = find_peaks(true.values, prominence = promiOverMean_peaks * true.mean())[0]
         return cv_mean_absolute_error_wAbs(true.iloc[peaks].values, estimate.iloc[peaks].values)
+        # return cv_root_mean_squared_error_wAbs(true.iloc[peaks].values, estimate.iloc[peaks].values)
     def getCVAME_valleys(true, estimate):
         valleys = find_peaks(-true.values, prominence = promiOverMean_valleys * true.mean())[0]
         return cv_mean_absolute_error_wAbs(true.iloc[valleys].values, estimate.iloc[valleys].values)
