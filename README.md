@@ -14,7 +14,7 @@ with other microclimates.
 
 ## Inputs
 ### Data
-Download the dataset from [Google Drive](https://drive.google.com/drive/folders/1RWX9ef1bM4drVp5AVWS11xkaZFG_q-DO?usp=drive_link) 
+Download the dataset from [Google Drive](https://drive.google.com/file/d/1K9-W-cC8ngkglDV2DOMNEwy00WGeFq6w/view?usp=sharing) 
 and name it as `data` in the root dir of the project.
 Please refer to the work by [Xu et. al.](https://github.com/IMMM-SFA/xu_etal_2022_sdata)
 for the explanation of the datasets.
